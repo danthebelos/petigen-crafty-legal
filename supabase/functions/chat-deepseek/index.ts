@@ -13,10 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error('DEEPSEEK_API_KEY não configurada')
-    }
+    const DEEPSEEK_API_KEY = 'sk-5d02e2c173204a4ebcf495aa13e68ff9'
 
     const { mensagem, contexto } = await req.json()
 
@@ -44,6 +41,10 @@ serve(async (req) => {
 
     const data = await response.json()
     console.log("Resposta do DeepSeek:", data)
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao se comunicar com o DeepSeek')
+    }
 
     return new Response(JSON.stringify({
       resposta: data.choices[0].message.content
