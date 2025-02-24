@@ -13,9 +13,26 @@ serve(async (req) => {
   }
 
   try {
-    const DEEPSEEK_API_KEY = 'sk-5d02e2c173204a4ebcf495aa13e68ff9'
+    const DEEPSEEK_API_KEY = 'sk-6538ea31b7d34ead8b80fe24f87ef499'
 
     const { mensagem, contexto } = await req.json()
+    console.log("Recebido:", { mensagem, contexto })
+
+    const payload = {
+      model: "deepseek-chat",
+      messages: [
+        {
+          role: "system",
+          content: "Você é um assistente jurídico especializado em melhorar petições. Você deve fornecer sugestões construtivas e específicas para melhorar o documento, mantendo a linguagem formal e técnica apropriada."
+        },
+        {
+          role: "user",
+          content: `Contexto da petição: ${contexto}\n\nSolicitação: ${mensagem}`
+        }
+      ],
+      temperature: 0.7,
+    }
+    console.log("Enviando para DeepSeek:", payload)
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -23,27 +40,15 @@ serve(async (req) => {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          {
-            role: "system",
-            content: "Você é um assistente jurídico especializado em melhorar petições. Você deve fornecer sugestões construtivas e específicas para melhorar o documento, mantendo a linguagem formal e técnica apropriada."
-          },
-          {
-            role: "user",
-            content: `Contexto da petição: ${contexto}\n\nSolicitação: ${mensagem}`
-          }
-        ],
-        temperature: 0.7,
-      }),
+      body: JSON.stringify(payload),
     })
 
     const data = await response.json()
-    console.log("Resposta do DeepSeek:", data)
+    console.log("Resposta completa do DeepSeek:", data)
 
     if (!response.ok) {
-      throw new Error(data.error || 'Erro ao se comunicar com o DeepSeek')
+      console.error("Erro do DeepSeek:", data)
+      throw new Error(data.error?.message || data.error || 'Erro ao se comunicar com o DeepSeek')
     }
 
     return new Response(JSON.stringify({
@@ -53,8 +58,11 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("Erro:", error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Erro detalhado:", error)
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.toString()
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
