@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
+import ChatInterface from "@/components/ChatInterface";
 
 const Questionnaire = () => {
   return (
@@ -18,7 +19,22 @@ const Questionnaire = () => {
           </p>
         </motion.div>
 
-        <QuestionnaireForm />
+        <div className="grid md:grid-cols-2 gap-8">
+          <QuestionnaireForm />
+          
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-zinc-900">
+              Assistente de Petições
+            </h2>
+            <p className="text-zinc-600">
+              Converse com nosso assistente para melhorar sua petição
+            </p>
+            <ChatInterface
+              peticaoId="temp-id" // Será substituído pelo ID real da petição
+              contexto="Exemplo de contexto" // Será substituído pelo contexto real
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
