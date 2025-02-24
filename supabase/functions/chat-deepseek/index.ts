@@ -13,13 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const DEEPSEEK_API_KEY = 'sk-6538ea31b7d34ead8b80fe24f87ef499'
-
     const { mensagem, contexto } = await req.json()
     console.log("Recebido:", { mensagem, contexto })
 
     const payload = {
-      model: "deepseek-chat",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -29,26 +27,25 @@ serve(async (req) => {
           role: "user",
           content: `Contexto da petição: ${contexto}\n\nSolicitação: ${mensagem}`
         }
-      ],
-      temperature: 0.7,
+      ]
     }
-    console.log("Enviando para DeepSeek:", payload)
+    console.log("Enviando para OpenAI:", payload)
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     })
 
     const data = await response.json()
-    console.log("Resposta completa do DeepSeek:", data)
+    console.log("Resposta completa da OpenAI:", data)
 
     if (!response.ok) {
-      console.error("Erro do DeepSeek:", data)
-      throw new Error(data.error?.message || data.error || 'Erro ao se comunicar com o DeepSeek')
+      console.error("Erro da OpenAI:", data)
+      throw new Error(data.error?.message || 'Erro ao se comunicar com a API')
     }
 
     return new Response(JSON.stringify({
