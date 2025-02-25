@@ -9,64 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_historico: {
+      conversations: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          mensagem: string
-          peticao_id: string | null
-          resposta: string
+          title: string
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          mensagem: string
-          peticao_id?: string | null
-          resposta: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          mensagem?: string
-          peticao_id?: string | null
-          resposta?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chat_historico_peticao_id_fkey"
-            columns: ["peticao_id"]
+            foreignKeyName: "fk_conversation"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "peticoes"
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
-      }
-      peticoes: {
-        Row: {
-          conteudo: string
-          created_at: string | null
-          id: string
-          titulo: string
-          updated_at: string | null
-          usuario_id: string | null
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string | null
-          id?: string
-          titulo: string
-          updated_at?: string | null
-          usuario_id?: string | null
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string | null
-          id?: string
-          titulo?: string
-          updated_at?: string | null
-          usuario_id?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {
