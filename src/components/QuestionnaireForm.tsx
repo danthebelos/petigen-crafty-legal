@@ -11,7 +11,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const steps = [
   "Tipo de Petição",
-  "Informações Pessoais",
+  "Informações Pessoais", 
   "Detalhes Específicos",
   "Revisão",
 ];
@@ -383,7 +383,7 @@ const QuestionnaireForm = () => {
       <h3 className="text-lg font-semibold">Revisão dos Dados</h3>
       <div className="space-y-4 text-sm">
         <div>
-          <span className="font-medium">Tipo de Peti��ão:</span> {formData.tipoPeticao}
+          <span className="font-medium">Tipo de Petição:</span> {formData.tipoPeticao}
         </div>
         <div>
           <span className="font-medium">Nome:</span> {formData.nome}
@@ -402,9 +402,6 @@ const QuestionnaireForm = () => {
             </div>
             <div>
               <span className="font-medium">Vara:</span> {formData.vara}
-            </div>
-            <div>
-              <span className="font-medium">Valor da Causa:</span> {formData.valorCausa}
             </div>
             <div>
               <span className="font-medium">Descrição dos Fatos:</span>

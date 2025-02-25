@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Loader2, FileDown } from "lucide-react";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 
 interface Message {
   role: "user" | "assistant";
@@ -92,8 +93,78 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   };
 
   const handleFinalizarPeticao = async () => {
-    // TODO: Implementar geração do documento Word
-    console.log("Gerando documento Word da petição...");
+    try {
+      // Pegar a última resposta do assistente (que deve ser a petição final)
+      const peticaoFinal = mensagens
+        .filter(m => m.role === "assistant")
+        .pop();
+
+      if (!peticaoFinal) {
+        throw new Error("Nenhuma petição encontrada");
+      }
+
+      // Criar o documento Word
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
+                heading: HeadingLevel.HEADING_1,
+                spacing: {
+                  after: 400,
+                },
+                alignment: "center",
+              }),
+              ...peticaoFinal.content
+                .split("\n")
+                .filter(linha => linha.trim())
+                .map(
+                  linha =>
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: linha,
+                          size: 24, // 12pt
+                        }),
+                      ],
+                      spacing: {
+                        after: 200,
+                      },
+                    })
+                ),
+            ],
+          },
+        ],
+      });
+
+      // Gerar o arquivo
+      const buffer = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(buffer);
+      
+      // Criar link para download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "peticao.docx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Sucesso!",
+        description: "Petição gerada com sucesso!",
+      });
+
+    } catch (error) {
+      console.error("Erro ao gerar documento:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível gerar o documento. Tente novamente.",
+      });
+    }
   };
 
   useEffect(() => {
