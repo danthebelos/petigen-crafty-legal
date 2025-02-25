@@ -51,11 +51,19 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
 
       // Salva no histórico
       await supabase
-        .from("chat_historico")
+        .from("messages")
         .insert({
-          peticao_id: peticaoId,
-          mensagem: mensagem,
-          resposta: data.resposta,
+          conversation_id: peticaoId,
+          content: mensagem,
+          role: 'user'
+        });
+
+      await supabase
+        .from("messages")
+        .insert({
+          conversation_id: peticaoId,
+          content: data.resposta,
+          role: 'assistant'
         });
 
     } catch (error) {

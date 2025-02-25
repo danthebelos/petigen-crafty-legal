@@ -13,11 +13,16 @@ serve(async (req) => {
   }
 
   try {
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error('DEEPSEEK_API_KEY não configurada')
+    }
+
     const { mensagem, contexto } = await req.json()
     console.log("Recebido:", { mensagem, contexto })
 
     const payload = {
-      model: "gpt-4o-mini",
+      model: "deepseek-chat",
       messages: [
         {
           role: "system",
@@ -27,25 +32,31 @@ serve(async (req) => {
           role: "user",
           content: `Contexto da petição: ${contexto}\n\nSolicitação: ${mensagem}`
         }
-      ]
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
     }
-    console.log("Enviando para OpenAI:", payload)
+    console.log("Enviando para DeepSeek:", payload)
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     })
 
     const data = await response.json()
-    console.log("Resposta completa da OpenAI:", data)
+    console.log("Resposta do DeepSeek:", {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers),
+      data
+    })
 
     if (!response.ok) {
-      console.error("Erro da OpenAI:", data)
-      throw new Error(data.error?.message || 'Erro ao se comunicar com a API')
+      throw new Error(data.error?.message || JSON.stringify(data.error) || 'Erro ao se comunicar com o DeepSeek')
     }
 
     return new Response(JSON.stringify({
@@ -55,7 +66,11 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("Erro detalhado:", error)
+    console.error("Erro detalhado:", {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause
+    })
     return new Response(JSON.stringify({ 
       error: error.message,
       details: error.toString()
