@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Send } from "lucide-react";
+import { Send, Loader2, FileDown } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -27,6 +27,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const [mensagem, setMensagem] = useState("");
   const [mensagens, setMensagens] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [peticaoPronta, setPeticaoPronta] = useState(false);
   const { toast } = useToast();
 
   const enviarMensagem = async (e?: React.FormEvent) => {
@@ -39,27 +40,30 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
 
     try {
       setIsLoading(true);
+      setPeticaoPronta(false);
       
-      // Adiciona mensagem do usuário ao chat
       const novaMensagemUsuario: Message = { role: "user", content: mensagemParaEnviar };
       setMensagens([...mensagens, novaMensagemUsuario]);
       setMensagem("");
 
-      // Chama a Edge Function
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
         body: { mensagem: mensagemParaEnviar, contexto },
       });
 
       if (error) throw error;
 
-      // Adiciona resposta do assistente ao chat
       const novaMensagemAssistente: Message = {
         role: "assistant",
         content: data.resposta,
       };
+      
       setMensagens(mensagens => [...mensagens, novaMensagemAssistente]);
 
-      // Salva no histórico
+      // Se for a primeira mensagem do assistente, assumimos que é a petição inicial
+      if (mensagens.filter(m => m.role === "assistant").length === 0) {
+        setPeticaoPronta(true);
+      }
+
       await supabase
         .from("messages")
         .insert([
@@ -87,7 +91,11 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
     }
   };
 
-  // Expor a função de envio globalmente
+  const handleFinalizarPeticao = async () => {
+    // TODO: Implementar geração do documento Word
+    console.log("Gerando documento Word da petição...");
+  };
+
   useEffect(() => {
     window.enviarMensagemParaChat = (mensagemExterna: string) => {
       setMensagem(mensagemExterna);
@@ -119,11 +127,27 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
               </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+          )}
         </div>
       </ScrollArea>
 
-      <form onSubmit={enviarMensagem} className="p-4 border-t">
-        <div className="flex gap-2">
+      <div className="p-4 border-t space-y-4">
+        {peticaoPronta && (
+          <Button
+            onClick={handleFinalizarPeticao}
+            className="w-full flex items-center justify-center gap-2"
+            variant="default"
+          >
+            <FileDown className="h-4 w-4" />
+            Finalizar e Gerar Petição
+          </Button>
+        )}
+        
+        <form onSubmit={enviarMensagem} className="flex gap-2">
           <Input
             value={mensagem}
             onChange={(e) => setMensagem(e.target.value)}
@@ -133,8 +157,8 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
           <Button type="submit" disabled={isLoading}>
             <Send className="h-4 w-4" />
           </Button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

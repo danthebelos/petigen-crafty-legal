@@ -23,19 +23,15 @@ interface FormData {
   nome: string;
   email: string;
   telefone: string;
-  // Campos comuns
   comarca: string;
   vara: string;
   valorCausa: string;
-  // Campos específicos - Petição Inicial
   descricaoFatos: string;
   fundamentacaoJuridica: string;
   pedidos: string;
-  // Campos específicos - Recurso
   numeroProcesso: string;
   tipoRecurso: string;
   razoesRecurso: string;
-  // Campos específicos - Execução
   tituloExecutivo: string;
   valorExecucao: string;
   bensExecutados: string;
@@ -103,10 +99,7 @@ const QuestionnaireForm = () => {
       contexto += `\nDados da Petição Inicial:\n`;
       contexto += `Comarca: ${formData.comarca}\n`;
       contexto += `Vara: ${formData.vara}\n`;
-      contexto += `Valor da Causa: ${formData.valorCausa}\n`;
       contexto += `\nDescrição dos Fatos:\n${formData.descricaoFatos}\n`;
-      contexto += `\nFundamentação Jurídica:\n${formData.fundamentacaoJuridica}\n`;
-      contexto += `\nPedidos:\n${formData.pedidos}`;
     } else if (formData.tipoPeticao === "recurso") {
       contexto += `\nDados do Recurso:\n`;
       contexto += `Número do Processo: ${formData.numeroProcesso}\n`;
@@ -119,7 +112,7 @@ const QuestionnaireForm = () => {
       contexto += `\nBens para Execução:\n${formData.bensExecutados}`;
     }
 
-    const mensagemInicial = `Por favor, gere uma ${formData.tipoPeticao} com base nas seguintes informações:\n\n${contexto}`;
+    const mensagemInicial = `Por favor, analise os fatos descritos e gere:\n1. A fundamentação jurídica adequada\n2. Os pedidos necessários\n3. Uma sugestão de valor da causa\n\nFatos:\n\n${contexto}`;
     
     if (window.enviarMensagemParaChat) {
       window.enviarMensagemParaChat(mensagemInicial);
@@ -247,58 +240,17 @@ const QuestionnaireForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="valorCausa">Valor da Causa</Label>
-              <Input
-                id="valorCausa"
-                name="valorCausa"
-                value={formData.valorCausa}
-                onChange={handleInputChange}
-                placeholder="R$ 0,00"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="descricaoFatos">
                 Descrição dos Fatos
-                <QuestionTooltip content="Descreva detalhadamente os fatos que fundamentam seu pedido" />
+                <QuestionTooltip content="Descreva detalhadamente os fatos que aconteceram. A fundamentação jurídica será gerada automaticamente." />
               </Label>
               <Textarea
                 id="descricaoFatos"
                 name="descricaoFatos"
                 value={formData.descricaoFatos}
                 onChange={handleInputChange}
-                placeholder="Descreva os fatos relevantes..."
-                className="min-h-[150px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fundamentacaoJuridica">
-                Fundamentação Jurídica
-                <QuestionTooltip content="Indique as leis e jurisprudências que fundamentam seu pedido" />
-              </Label>
-              <Textarea
-                id="fundamentacaoJuridica"
-                name="fundamentacaoJuridica"
-                value={formData.fundamentacaoJuridica}
-                onChange={handleInputChange}
-                placeholder="Digite a fundamentação jurídica..."
-                className="min-h-[150px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="pedidos">
-                Pedidos
-                <QuestionTooltip content="Liste todos os pedidos que deseja fazer ao juízo" />
-              </Label>
-              <Textarea
-                id="pedidos"
-                name="pedidos"
-                value={formData.pedidos}
-                onChange={handleInputChange}
-                placeholder="Liste seus pedidos..."
-                className="min-h-[150px]"
+                placeholder="Descreva os fatos relevantes do seu caso..."
+                className="min-h-[250px]"
               />
             </div>
           </motion.div>
@@ -431,7 +383,7 @@ const QuestionnaireForm = () => {
       <h3 className="text-lg font-semibold">Revisão dos Dados</h3>
       <div className="space-y-4 text-sm">
         <div>
-          <span className="font-medium">Tipo de Petição:</span> {formData.tipoPeticao}
+          <span className="font-medium">Tipo de Peti��ão:</span> {formData.tipoPeticao}
         </div>
         <div>
           <span className="font-medium">Nome:</span> {formData.nome}
