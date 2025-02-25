@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,7 @@ interface FormData {
 
 const QuestionnaireForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     tipoPeticao: "",
     nome: "",
@@ -77,16 +77,57 @@ const QuestionnaireForm = () => {
     });
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleFormSubmit();
+    }
+  };
+
+  const handleFormSubmit = () => {
+    setIsCompleted(true);
+    
+    let contexto = `Tipo de Petição: ${formData.tipoPeticao}\n`;
+    contexto += `Nome: ${formData.nome}\n`;
+    contexto += `Email: ${formData.email}\n`;
+    contexto += `Telefone: ${formData.telefone}\n`;
+
+    if (formData.tipoPeticao === "inicial") {
+      contexto += `\nDados da Petição Inicial:\n`;
+      contexto += `Comarca: ${formData.comarca}\n`;
+      contexto += `Vara: ${formData.vara}\n`;
+      contexto += `Valor da Causa: ${formData.valorCausa}\n`;
+      contexto += `\nDescrição dos Fatos:\n${formData.descricaoFatos}\n`;
+      contexto += `\nFundamentação Jurídica:\n${formData.fundamentacaoJuridica}\n`;
+      contexto += `\nPedidos:\n${formData.pedidos}`;
+    } else if (formData.tipoPeticao === "recurso") {
+      contexto += `\nDados do Recurso:\n`;
+      contexto += `Número do Processo: ${formData.numeroProcesso}\n`;
+      contexto += `Tipo de Recurso: ${formData.tipoRecurso}\n`;
+      contexto += `\nRazões do Recurso:\n${formData.razoesRecurso}`;
+    } else if (formData.tipoPeticao === "execucao") {
+      contexto += `\nDados da Execução:\n`;
+      contexto += `Título Executivo: ${formData.tituloExecutivo}\n`;
+      contexto += `Valor da Execução: ${formData.valorExecucao}\n`;
+      contexto += `\nBens para Execução:\n${formData.bensExecutados}`;
+    }
+
+    const mensagemInicial = `Por favor, gere uma ${formData.tipoPeticao} com base nas seguintes informações:\n\n${contexto}`;
+    
+    if (window.enviarMensagemParaChat) {
+      window.enviarMensagemParaChat(mensagemInicial);
+    }
+  };
+
+  const handleGerarDocumentos = async () => {
+    console.log("Gerando documentos...");
   };
 
   const renderTipoPeticao = () => (
@@ -450,6 +491,18 @@ const QuestionnaireForm = () => {
           </>
         )}
       </div>
+
+      {isCompleted && (
+        <div className="mt-6">
+          <Button
+            onClick={handleGerarDocumentos}
+            className="w-full"
+            variant="default"
+          >
+            Gerar Documentos (PDF e Word)
+          </Button>
+        </div>
+      )}
     </motion.div>
   );
 
@@ -490,10 +543,9 @@ const QuestionnaireForm = () => {
           
           <Button
             onClick={nextStep}
-            disabled={currentStep === steps.length - 1}
             className="flex items-center"
           >
-            Próximo
+            {currentStep === steps.length - 1 ? "Finalizar" : "Próximo"}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

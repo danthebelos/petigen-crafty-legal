@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,27 +17,37 @@ interface ChatInterfaceProps {
   contexto: string;
 }
 
+declare global {
+  interface Window {
+    enviarMensagemParaChat: (mensagem: string) => void;
+  }
+}
+
 const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const [mensagem, setMensagem] = useState("");
   const [mensagens, setMensagens] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const enviarMensagem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mensagem.trim() || isLoading) return;
+  const enviarMensagem = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    const mensagemParaEnviar = e ? mensagem : mensagem;
+    if (!mensagemParaEnviar.trim() || isLoading) return;
 
     try {
       setIsLoading(true);
       
       // Adiciona mensagem do usuário ao chat
-      const novaMensagemUsuario: Message = { role: "user", content: mensagem };
+      const novaMensagemUsuario: Message = { role: "user", content: mensagemParaEnviar };
       setMensagens([...mensagens, novaMensagemUsuario]);
       setMensagem("");
 
       // Chama a Edge Function
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
-        body: { mensagem, contexto },
+        body: { mensagem: mensagemParaEnviar, contexto },
       });
 
       if (error) throw error;
@@ -52,19 +62,18 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       // Salva no histórico
       await supabase
         .from("messages")
-        .insert({
-          conversation_id: peticaoId,
-          content: mensagem,
-          role: 'user'
-        });
-
-      await supabase
-        .from("messages")
-        .insert({
-          conversation_id: peticaoId,
-          content: data.resposta,
-          role: 'assistant'
-        });
+        .insert([
+          {
+            conversation_id: peticaoId,
+            content: mensagemParaEnviar,
+            role: 'user'
+          },
+          {
+            conversation_id: peticaoId,
+            content: data.resposta,
+            role: 'assistant'
+          }
+        ]);
 
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -77,6 +86,16 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       setIsLoading(false);
     }
   };
+
+  // Expor a função de envio globalmente
+  useEffect(() => {
+    window.enviarMensagemParaChat = (mensagemExterna: string) => {
+      setMensagem(mensagemExterna);
+      setTimeout(() => {
+        enviarMensagem();
+      }, 100);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-xl shadow-sm">
