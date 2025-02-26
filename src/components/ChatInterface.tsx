@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Loader2, FileDown } from "lucide-react";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
 
 interface Message {
   role: "user" | "assistant";
@@ -31,6 +31,60 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const [peticaoPronta, setPeticaoPronta] = useState(false);
   const { toast } = useToast();
 
+  const formatarTexto = (texto: string) => {
+    // Substitui **texto** por <strong>texto</strong> para negrito
+    texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Substitui *texto* por <em>texto</em> para itálico
+    texto = texto.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    return texto;
+  };
+
+  const renderizarMensagem = (content: string) => {
+    return <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatarTexto(content) }} />;
+  };
+
+  const gerarDocumentoWord = async (texto: string) => {
+    // Dividir o texto em seções
+    const secoes = texto.split('\n\n');
+
+    const paragrafos = secoes.map(secao => {
+      // Detectar se é um título (todo em maiúsculas)
+      const ehTitulo = secao.trim().toUpperCase() === secao.trim();
+
+      return new Paragraph({
+        children: [
+          new TextRun({
+            text: secao,
+            size: ehTitulo ? 28 : 24, // 14pt para títulos, 12pt para texto normal
+            bold: ehTitulo,
+          }),
+        ],
+        spacing: {
+          after: 400,
+          before: ehTitulo ? 400 : 200,
+        },
+        alignment: ehTitulo ? AlignmentType.CENTER : AlignmentType.LEFT,
+      });
+    });
+
+    return new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
+              heading: HeadingLevel.HEADING_1,
+              spacing: { after: 400 },
+              alignment: AlignmentType.CENTER,
+            }),
+            ...paragrafos,
+          ],
+        },
+      ],
+    });
+  };
+
   const enviarMensagem = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -48,7 +102,18 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       setMensagem("");
 
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
-        body: { mensagem: mensagemParaEnviar, contexto },
+        body: { 
+          mensagem: mensagemParaEnviar, 
+          contexto,
+          instrucoes: `Gere uma petição extremamente fundamentada. Inclua:
+          1. Todos os aspectos legais relevantes, incluindo legislação, jurisprudência e doutrina
+          2. Formatação adequada com **negrito** para destaques importantes e *itálico* para citações
+          3. Organize em seções claras: FATOS, DIREITO, PEDIDOS
+          4. Use numeração para os pedidos
+          5. Inclua citações de jurisprudência recente
+          6. Faça referência a artigos específicos das leis aplicáveis
+          7. Fundamente cada argumento com pelo menos uma fonte legal`
+        },
       });
 
       if (error) throw error;
@@ -60,7 +125,6 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       
       setMensagens(mensagens => [...mensagens, novaMensagemAssistente]);
 
-      // Se for a primeira mensagem do assistente, assumimos que é a petição inicial
       if (mensagens.filter(m => m.role === "assistant").length === 0) {
         setPeticaoPronta(true);
       }
@@ -94,7 +158,6 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
 
   const handleFinalizarPeticao = async () => {
     try {
-      // Pegar a última resposta do assistente (que deve ser a petição final)
       const peticaoFinal = mensagens
         .filter(m => m.role === "assistant")
         .pop();
@@ -103,47 +166,10 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
         throw new Error("Nenhuma petição encontrada");
       }
 
-      // Criar o documento Word
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: [
-              new Paragraph({
-                text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
-                heading: HeadingLevel.HEADING_1,
-                spacing: {
-                  after: 400,
-                },
-                alignment: "center",
-              }),
-              ...peticaoFinal.content
-                .split("\n")
-                .filter(linha => linha.trim())
-                .map(
-                  linha =>
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: linha,
-                          size: 24, // 12pt
-                        }),
-                      ],
-                      spacing: {
-                        after: 200,
-                      },
-                    })
-                ),
-            ],
-          },
-        ],
-      });
-
-      // Gerar o arquivo
+      const doc = await gerarDocumentoWord(peticaoFinal.content);
       const buffer = await Packer.toBlob(doc);
       const url = URL.createObjectURL(buffer);
       
-      // Criar link para download
       const link = document.createElement("a");
       link.href = url;
       link.download = "peticao.docx";
@@ -194,7 +220,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                     : "bg-zinc-100 text-zinc-900"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                {renderizarMensagem(msg.content)}
               </div>
             </div>
           ))}
