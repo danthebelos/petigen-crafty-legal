@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,6 +117,12 @@ const QuestionnaireForm = () => {
     pedidos: "",
   });
 
+  const variants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
@@ -212,9 +217,10 @@ const QuestionnaireForm = () => {
 
   const renderTipoPeticao = () => (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={variants}
       className="space-y-6"
     >
       <div className="space-y-2">
@@ -242,9 +248,10 @@ const QuestionnaireForm = () => {
 
   const renderInformacoesPessoais = () => (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={variants}
       className="space-y-6"
     >
       <div className="space-y-2">
@@ -325,9 +332,10 @@ const QuestionnaireForm = () => {
       case "trabalhista":
         return (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
             className="space-y-6"
           >
             <div className="space-y-2">
@@ -443,9 +451,10 @@ const QuestionnaireForm = () => {
       case "consumidor":
         return (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
             className="space-y-6"
           >
             <div className="space-y-2">
@@ -584,9 +593,10 @@ const QuestionnaireForm = () => {
       case "recurso":
         return (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
             className="space-y-6"
           >
             <div className="space-y-2">
@@ -645,9 +655,10 @@ const QuestionnaireForm = () => {
       case "execucao":
         return (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={variants}
             className="space-y-6"
           >
             <div className="space-y-2">
@@ -711,9 +722,10 @@ const QuestionnaireForm = () => {
 
   const renderRevisao = () => (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={variants}
       className="space-y-6"
     >
       <h3 className="text-lg font-semibold">Revisão dos Dados</h3>
@@ -775,3 +787,76 @@ const QuestionnaireForm = () => {
             </div>
             <div>
               <span className="font-medium">Produto/Serviço:</span>
+            </div>
+          </>
+        )}
+
+        {formData.tipoPeticao === "recurso" && (
+          <>
+            <div>
+              <span className="font-medium">Número do Processo:</span> {formData.numeroProcesso}
+            </div>
+            <div>
+              <span className="font-medium">Tipo de Recurso:</span> {formData.tipoRecurso}
+            </div>
+            <div>
+              <span className="font-medium">Razões do Recurso:</span>
+              <p className="mt-1 whitespace-pre-wrap">{formData.razoesRecurso}</p>
+            </div>
+          </>
+        )}
+
+        {formData.tipoPeticao === "execucao" && (
+          <>
+            <div>
+              <span className="font-medium">Título Executivo:</span> {formData.tituloExecutivo}
+            </div>
+            <div>
+              <span className="font-medium">Valor da Execução:</span> {formData.valorExecucao}
+            </div>
+            <div>
+              <span className="font-medium">Bens para Execução:</span>
+              <p className="mt-1 whitespace-pre-wrap">{formData.bensExecutados}</p>
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-sm">
+      <StepIndicator currentStep={currentStep} steps={steps} />
+      
+      <div className="mt-8">
+        {currentStep === 0 && renderTipoPeticao()}
+        {currentStep === 1 && renderInformacoesPessoais()}
+        {currentStep === 2 && renderDetalhesEspecificos()}
+        {currentStep === 3 && renderRevisao()}
+      </div>
+
+      <div className="mt-8 flex justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={prevStep}
+          disabled={currentStep === 0}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Anterior
+        </Button>
+        <Button
+          type="button"
+          onClick={nextStep}
+        >
+          {currentStep === steps.length - 1 ? "Finalizar" : "Próximo"}
+          {currentStep !== steps.length - 1 && (
+            <ArrowRight className="w-4 h-4 ml-2" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default QuestionnaireForm;
