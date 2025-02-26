@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -33,26 +34,39 @@ const Auth = () => {
         const { error: signUpError, data } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              nome_completo: nomeCompleto,
+              oab: oab,
+            },
+          },
         });
+        
         if (signUpError) throw signUpError;
 
         if (data.user) {
-          // Atualizar o perfil do usuário
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({
-              nome_completo: nomeCompleto,
-              oab,
-            })
-            .eq("id", data.user.id);
+          // Enviar email de boas-vindas
+          const { error: welcomeEmailError } = await supabase.functions.invoke(
+            "send-welcome-email",
+            {
+              body: { 
+                user: {
+                  email,
+                  nome_completo: nomeCompleto,
+                },
+              },
+            }
+          );
 
-          if (updateError) throw updateError;
+          if (welcomeEmailError) {
+            console.error("Erro ao enviar email de boas-vindas:", welcomeEmailError);
+          }
+
+          toast({
+            title: "Cadastro realizado!",
+            description: "Verifique seu email para confirmar o cadastro.",
+          });
         }
-
-        toast({
-          title: "Cadastro realizado!",
-          description: "Verifique seu email para confirmar o cadastro.",
-        });
       }
     } catch (error) {
       toast({
@@ -66,13 +80,19 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-50 to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold text-zinc-900">
             {isLogin ? "Entre na sua conta" : "Crie sua conta"}
           </h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            {isLogin
+              ? "Acesse sua conta para gerenciar suas petições"
+              : "Cadastre-se para começar a usar o Petigen"}
+          </p>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleAuth}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
@@ -87,6 +107,7 @@ const Auth = () => {
                 placeholder="seu@email.com"
               />
             </div>
+
             <div>
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -99,6 +120,7 @@ const Auth = () => {
                 placeholder="••••••••"
               />
             </div>
+
             {!isLogin && (
               <>
                 <div>
@@ -113,6 +135,7 @@ const Auth = () => {
                     placeholder="Seu nome completo"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="oab">Número da OAB</Label>
                   <Input
@@ -131,12 +154,14 @@ const Auth = () => {
 
           <div className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading
                 ? "Carregando..."
                 : isLogin
                 ? "Entrar"
                 : "Criar conta"}
             </Button>
+
             <Button
               type="button"
               variant="ghost"
