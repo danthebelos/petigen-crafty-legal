@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,10 @@ const steps = [
   "Revisão",
 ];
 
-type TipoPeticao = "inicial" | "recurso" | "execucao" | "";
+type TipoPeticao = "inicial" | "recurso" | "execucao" | "trabalhista" | "consumidor" | "";
 
 interface FormData {
+  // Campos básicos
   tipoPeticao: TipoPeticao;
   nome: string;
   email: string;
@@ -26,15 +28,44 @@ interface FormData {
   comarca: string;
   vara: string;
   valorCausa: string;
-  descricaoFatos: string;
-  fundamentacaoJuridica: string;
-  pedidos: string;
+  
+  // Campos específicos - Trabalhista
+  periodoTrabalho: string;
+  cargo: string;
+  salario: string;
+  horasExtras: boolean;
+  adicionalNoturno: boolean;
+  insalubridade: boolean;
+  periculosidade: boolean;
+  verbasRescisorias: boolean;
+  detalhesViolacoes: string;
+  
+  // Campos específicos - Consumidor
+  tipoRelacaoConsumo: string;
+  dataOcorrencia: string;
+  produtoServico: string;
+  valorProduto: string;
+  descricaoProblema: string;
+  tentativaConciliacao: boolean;
+  protocoloReclamacao: string;
+  danosMorais: boolean;
+  danosMateriais: boolean;
+  valorDanosMateriais: string;
+  
+  // Campos específicos - Recurso
   numeroProcesso: string;
   tipoRecurso: string;
   razoesRecurso: string;
+  
+  // Campos específicos - Execução
   tituloExecutivo: string;
   valorExecucao: string;
   bensExecutados: string;
+  
+  // Campos comuns para todas as petições
+  descricaoFatos: string;
+  fundamentacaoJuridica: string;
+  pedidos: string;
 }
 
 const QuestionnaireForm = () => {
@@ -48,15 +79,43 @@ const QuestionnaireForm = () => {
     comarca: "",
     vara: "",
     valorCausa: "",
-    descricaoFatos: "",
-    fundamentacaoJuridica: "",
-    pedidos: "",
+    
+    // Inicialização dos campos trabalhistas
+    periodoTrabalho: "",
+    cargo: "",
+    salario: "",
+    horasExtras: false,
+    adicionalNoturno: false,
+    insalubridade: false,
+    periculosidade: false,
+    verbasRescisorias: false,
+    detalhesViolacoes: "",
+    
+    // Inicialização dos campos do consumidor
+    tipoRelacaoConsumo: "",
+    dataOcorrencia: "",
+    produtoServico: "",
+    valorProduto: "",
+    descricaoProblema: "",
+    tentativaConciliacao: false,
+    protocoloReclamacao: "",
+    danosMorais: false,
+    danosMateriais: false,
+    valorDanosMateriais: "",
+    
+    // Inicialização dos campos de recurso
     numeroProcesso: "",
     tipoRecurso: "",
     razoesRecurso: "",
+    
+    // Inicialização dos campos de execução
     tituloExecutivo: "",
     valorExecucao: "",
     bensExecutados: "",
+    
+    descricaoFatos: "",
+    fundamentacaoJuridica: "",
+    pedidos: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -70,6 +129,13 @@ const QuestionnaireForm = () => {
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  const handleCheckboxChange = (name: keyof FormData) => {
+    setFormData({
+      ...formData,
+      [name]: !formData[name],
     });
   };
 
@@ -95,32 +161,53 @@ const QuestionnaireForm = () => {
     contexto += `Email: ${formData.email}\n`;
     contexto += `Telefone: ${formData.telefone}\n`;
 
-    if (formData.tipoPeticao === "inicial") {
-      contexto += `\nDados da Petição Inicial:\n`;
-      contexto += `Comarca: ${formData.comarca}\n`;
-      contexto += `Vara: ${formData.vara}\n`;
-      contexto += `\nDescrição dos Fatos:\n${formData.descricaoFatos}\n`;
-    } else if (formData.tipoPeticao === "recurso") {
-      contexto += `\nDados do Recurso:\n`;
-      contexto += `Número do Processo: ${formData.numeroProcesso}\n`;
-      contexto += `Tipo de Recurso: ${formData.tipoRecurso}\n`;
-      contexto += `\nRazões do Recurso:\n${formData.razoesRecurso}`;
-    } else if (formData.tipoPeticao === "execucao") {
-      contexto += `\nDados da Execução:\n`;
-      contexto += `Título Executivo: ${formData.tituloExecutivo}\n`;
-      contexto += `Valor da Execução: ${formData.valorExecucao}\n`;
-      contexto += `\nBens para Execução:\n${formData.bensExecutados}`;
+    // Adicionar informações específicas baseadas no tipo de petição
+    switch (formData.tipoPeticao) {
+      case "trabalhista":
+        contexto += `\nInformações Trabalhistas:\n`;
+        contexto += `Período de Trabalho: ${formData.periodoTrabalho}\n`;
+        contexto += `Cargo: ${formData.cargo}\n`;
+        contexto += `Salário: ${formData.salario}\n`;
+        contexto += `Horas Extras: ${formData.horasExtras ? "Sim" : "Não"}\n`;
+        contexto += `Adicional Noturno: ${formData.adicionalNoturno ? "Sim" : "Não"}\n`;
+        contexto += `Insalubridade: ${formData.insalubridade ? "Sim" : "Não"}\n`;
+        contexto += `Periculosidade: ${formData.periculosidade ? "Sim" : "Não"}\n`;
+        contexto += `Verbas Rescisórias: ${formData.verbasRescisorias ? "Sim" : "Não"}\n`;
+        contexto += `\nDetalhes das Violações:\n${formData.detalhesViolacoes}`;
+        break;
+
+      case "consumidor":
+        contexto += `\nInformações do Direito do Consumidor:\n`;
+        contexto += `Tipo de Relação de Consumo: ${formData.tipoRelacaoConsumo}\n`;
+        contexto += `Data da Ocorrência: ${formData.dataOcorrencia}\n`;
+        contexto += `Produto/Serviço: ${formData.produtoServico}\n`;
+        contexto += `Valor do Produto: ${formData.valorProduto}\n`;
+        contexto += `Tentativa de Conciliação: ${formData.tentativaConciliacao ? "Sim" : "Não"}\n`;
+        contexto += `Protocolo de Reclamação: ${formData.protocoloReclamacao}\n`;
+        contexto += `Danos Morais: ${formData.danosMorais ? "Sim" : "Não"}\n`;
+        contexto += `Danos Materiais: ${formData.danosMateriais ? "Sim" : "Não"}\n`;
+        contexto += `Valor dos Danos Materiais: ${formData.valorDanosMateriais}\n`;
+        contexto += `\nDescrição do Problema:\n${formData.descricaoProblema}`;
+        break;
+
+      case "recurso":
+        contexto += `\nInformações do Recurso:\n`;
+        contexto += `Número do Processo: ${formData.numeroProcesso}\n`;
+        contexto += `Tipo de Recurso: ${formData.tipoRecurso}\n`;
+        contexto += `\nRazões do Recurso:\n${formData.razoesRecurso}`;
+        break;
+
+      case "execucao":
+        contexto += `\nInformações da Execução:\n`;
+        contexto += `Título Executivo: ${formData.tituloExecutivo}\n`;
+        contexto += `Valor da Execução: ${formData.valorExecucao}\n`;
+        contexto += `\nBens para Execução:\n${formData.bensExecutados}`;
+        break;
     }
 
-    const mensagemInicial = `Por favor, analise os fatos descritos e gere:\n1. A fundamentação jurídica adequada\n2. Os pedidos necessários\n3. Uma sugestão de valor da causa\n\nFatos:\n\n${contexto}`;
-    
     if (window.enviarMensagemParaChat) {
-      window.enviarMensagemParaChat(mensagemInicial);
+      window.enviarMensagemParaChat(contexto);
     }
-  };
-
-  const handleGerarDocumentos = async () => {
-    console.log("Gerando documentos...");
   };
 
   const renderTipoPeticao = () => (
@@ -143,7 +230,8 @@ const QuestionnaireForm = () => {
             <SelectValue placeholder="Selecione o tipo de petição" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="inicial">Petição Inicial</SelectItem>
+            <SelectItem value="trabalhista">Trabalhista</SelectItem>
+            <SelectItem value="consumidor">Direito do Consumidor</SelectItem>
             <SelectItem value="recurso">Recurso</SelectItem>
             <SelectItem value="execucao">Execução</SelectItem>
           </SelectContent>
@@ -162,22 +250,21 @@ const QuestionnaireForm = () => {
       <div className="space-y-2">
         <Label htmlFor="nome">
           Nome Completo
-          <QuestionTooltip content="Digite seu nome completo como consta em documentos oficiais" />
+          <QuestionTooltip content="Digite o nome completo do cliente" />
         </Label>
         <Input
           id="nome"
           name="nome"
           value={formData.nome}
           onChange={handleInputChange}
-          placeholder="João da Silva"
-          className="w-full"
+          placeholder="Nome completo"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="email">
           Email
-          <QuestionTooltip content="Seu email principal para contato" />
+          <QuestionTooltip content="Email para contato" />
         </Label>
         <Input
           id="email"
@@ -185,23 +272,49 @@ const QuestionnaireForm = () => {
           type="email"
           value={formData.email}
           onChange={handleInputChange}
-          placeholder="joao@email.com"
-          className="w-full"
+          placeholder="email@exemplo.com"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="telefone">
           Telefone
-          <QuestionTooltip content="Número de telefone com DDD" />
+          <QuestionTooltip content="Telefone para contato" />
         </Label>
         <Input
           id="telefone"
           name="telefone"
           value={formData.telefone}
           onChange={handleInputChange}
-          placeholder="(11) 99999-9999"
-          className="w-full"
+          placeholder="(00) 00000-0000"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="comarca">
+          Comarca
+          <QuestionTooltip content="Comarca onde será ajuizada a ação" />
+        </Label>
+        <Input
+          id="comarca"
+          name="comarca"
+          value={formData.comarca}
+          onChange={handleInputChange}
+          placeholder="Nome da comarca"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="vara">
+          Vara
+          <QuestionTooltip content="Vara específica, se aplicável" />
+        </Label>
+        <Input
+          id="vara"
+          name="vara"
+          value={formData.vara}
+          onChange={handleInputChange}
+          placeholder="Ex: 1ª Vara do Trabalho"
         />
       </div>
     </motion.div>
@@ -209,7 +322,7 @@ const QuestionnaireForm = () => {
 
   const renderDetalhesEspecificos = () => {
     switch (formData.tipoPeticao) {
-      case "inicial":
+      case "trabalhista":
         return (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -218,39 +331,251 @@ const QuestionnaireForm = () => {
             className="space-y-6"
           >
             <div className="space-y-2">
-              <Label htmlFor="comarca">Comarca</Label>
+              <Label htmlFor="periodoTrabalho">Período de Trabalho</Label>
               <Input
-                id="comarca"
-                name="comarca"
-                value={formData.comarca}
+                id="periodoTrabalho"
+                name="periodoTrabalho"
+                value={formData.periodoTrabalho}
                 onChange={handleInputChange}
-                placeholder="Ex: São Paulo"
+                placeholder="Ex: 01/01/2020 a 01/01/2023"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="vara">Vara</Label>
+              <Label htmlFor="cargo">Cargo</Label>
               <Input
-                id="vara"
-                name="vara"
-                value={formData.vara}
+                id="cargo"
+                name="cargo"
+                value={formData.cargo}
                 onChange={handleInputChange}
-                placeholder="Ex: 1ª Vara Cível"
+                placeholder="Ex: Auxiliar Administrativo"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="descricaoFatos">
-                Descrição dos Fatos
-                <QuestionTooltip content="Descreva detalhadamente os fatos que aconteceram. A fundamentação jurídica será gerada automaticamente." />
+              <Label htmlFor="salario">Salário</Label>
+              <Input
+                id="salario"
+                name="salario"
+                value={formData.salario}
+                onChange={handleInputChange}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Direitos Violados</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="horasExtras"
+                    checked={formData.horasExtras}
+                    onChange={() => handleCheckboxChange("horasExtras")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="horasExtras">Horas Extras</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="adicionalNoturno"
+                    checked={formData.adicionalNoturno}
+                    onChange={() => handleCheckboxChange("adicionalNoturno")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="adicionalNoturno">Adicional Noturno</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="insalubridade"
+                    checked={formData.insalubridade}
+                    onChange={() => handleCheckboxChange("insalubridade")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="insalubridade">Insalubridade</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="periculosidade"
+                    checked={formData.periculosidade}
+                    onChange={() => handleCheckboxChange("periculosidade")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="periculosidade">Periculosidade</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="verbasRescisorias"
+                    checked={formData.verbasRescisorias}
+                    onChange={() => handleCheckboxChange("verbasRescisorias")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="verbasRescisorias">Verbas Rescisórias</Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="detalhesViolacoes">
+                Detalhes das Violações
+                <QuestionTooltip content="Descreva detalhadamente as violações aos direitos trabalhistas" />
               </Label>
               <Textarea
-                id="descricaoFatos"
-                name="descricaoFatos"
-                value={formData.descricaoFatos}
+                id="detalhesViolacoes"
+                name="detalhesViolacoes"
+                value={formData.detalhesViolacoes}
                 onChange={handleInputChange}
-                placeholder="Descreva os fatos relevantes do seu caso..."
-                className="min-h-[250px]"
+                placeholder="Descreva as violações aos direitos trabalhistas..."
+                className="min-h-[150px]"
+              />
+            </div>
+          </motion.div>
+        );
+
+      case "consumidor":
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="tipoRelacaoConsumo">Tipo de Relação de Consumo</Label>
+              <Select
+                value={formData.tipoRelacaoConsumo}
+                onValueChange={(value) => handleSelectChange("tipoRelacaoConsumo", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de relação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="produto">Produto</SelectItem>
+                  <SelectItem value="servico">Serviço</SelectItem>
+                  <SelectItem value="ambos">Produto e Serviço</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dataOcorrencia">Data da Ocorrência</Label>
+              <Input
+                id="dataOcorrencia"
+                name="dataOcorrencia"
+                type="date"
+                value={formData.dataOcorrencia}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="produtoServico">Produto/Serviço</Label>
+              <Input
+                id="produtoServico"
+                name="produtoServico"
+                value={formData.produtoServico}
+                onChange={handleInputChange}
+                placeholder="Nome do produto ou serviço"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="valorProduto">Valor do Produto/Serviço</Label>
+              <Input
+                id="valorProduto"
+                name="valorProduto"
+                value={formData.valorProduto}
+                onChange={handleInputChange}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="tentativaConciliacao"
+                  checked={formData.tentativaConciliacao}
+                  onChange={() => handleCheckboxChange("tentativaConciliacao")}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="tentativaConciliacao">Tentativa de Conciliação Prévia</Label>
+              </div>
+
+              {formData.tentativaConciliacao && (
+                <div className="space-y-2">
+                  <Label htmlFor="protocoloReclamacao">Protocolo da Reclamação</Label>
+                  <Input
+                    id="protocoloReclamacao"
+                    name="protocoloReclamacao"
+                    value={formData.protocoloReclamacao}
+                    onChange={handleInputChange}
+                    placeholder="Número do protocolo"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <Label>Tipos de Danos</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="danosMorais"
+                    checked={formData.danosMorais}
+                    onChange={() => handleCheckboxChange("danosMorais")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="danosMorais">Danos Morais</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="danosMateriais"
+                    checked={formData.danosMateriais}
+                    onChange={() => handleCheckboxChange("danosMateriais")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="danosMateriais">Danos Materiais</Label>
+                </div>
+              </div>
+
+              {formData.danosMateriais && (
+                <div className="space-y-2">
+                  <Label htmlFor="valorDanosMateriais">Valor dos Danos Materiais</Label>
+                  <Input
+                    id="valorDanosMateriais"
+                    name="valorDanosMateriais"
+                    value={formData.valorDanosMateriais}
+                    onChange={handleInputChange}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="descricaoProblema">
+                Descrição do Problema
+                <QuestionTooltip content="Descreva detalhadamente o problema enfrentado" />
+              </Label>
+              <Textarea
+                id="descricaoProblema"
+                name="descricaoProblema"
+                value={formData.descricaoProblema}
+                onChange={handleInputChange}
+                placeholder="Descreva o problema detalhadamente..."
+                className="min-h-[150px]"
               />
             </div>
           </motion.div>
@@ -294,6 +619,8 @@ const QuestionnaireForm = () => {
                   <SelectItem value="apelacao">Apelação</SelectItem>
                   <SelectItem value="agravo">Agravo de Instrumento</SelectItem>
                   <SelectItem value="embargos">Embargos de Declaração</SelectItem>
+                  <SelectItem value="especial">Recurso Especial</SelectItem>
+                  <SelectItem value="extraordinario">Recurso Extraordinário</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -328,13 +655,22 @@ const QuestionnaireForm = () => {
                 Título Executivo
                 <QuestionTooltip content="Especifique o título executivo (judicial ou extrajudicial)" />
               </Label>
-              <Input
-                id="tituloExecutivo"
-                name="tituloExecutivo"
+              <Select
                 value={formData.tituloExecutivo}
-                onChange={handleInputChange}
-                placeholder="Ex: Sentença Judicial / Nota Promissória"
-              />
+                onValueChange={(value) => handleSelectChange("tituloExecutivo", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de título" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sentenca">Sentença Judicial</SelectItem>
+                  <SelectItem value="acordo">Acordo Judicial</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="nota">Nota Promissória</SelectItem>
+                  <SelectItem value="duplicata">Duplicata</SelectItem>
+                  <SelectItem value="contrato">Contrato</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -394,113 +730,48 @@ const QuestionnaireForm = () => {
         <div>
           <span className="font-medium">Telefone:</span> {formData.telefone}
         </div>
+        <div>
+          <span className="font-medium">Comarca:</span> {formData.comarca}
+        </div>
+        <div>
+          <span className="font-medium">Vara:</span> {formData.vara}
+        </div>
         
-        {formData.tipoPeticao === "inicial" && (
+        {formData.tipoPeticao === "trabalhista" && (
           <>
             <div>
-              <span className="font-medium">Comarca:</span> {formData.comarca}
+              <span className="font-medium">Período de Trabalho:</span> {formData.periodoTrabalho}
             </div>
             <div>
-              <span className="font-medium">Vara:</span> {formData.vara}
+              <span className="font-medium">Cargo:</span> {formData.cargo}
             </div>
             <div>
-              <span className="font-medium">Descrição dos Fatos:</span>
-              <p className="mt-1 whitespace-pre-wrap">{formData.descricaoFatos}</p>
+              <span className="font-medium">Salário:</span> {formData.salario}
+            </div>
+            <div>
+              <span className="font-medium">Direitos Violados:</span>
+              <ul className="list-disc pl-5 mt-2">
+                {formData.horasExtras && <li>Horas Extras</li>}
+                {formData.adicionalNoturno && <li>Adicional Noturno</li>}
+                {formData.insalubridade && <li>Insalubridade</li>}
+                {formData.periculosidade && <li>Periculosidade</li>}
+                {formData.verbasRescisorias && <li>Verbas Rescisórias</li>}
+              </ul>
+            </div>
+            <div>
+              <span className="font-medium">Detalhes das Violações:</span>
+              <p className="mt-1 whitespace-pre-wrap">{formData.detalhesViolacoes}</p>
             </div>
           </>
         )}
 
-        {formData.tipoPeticao === "recurso" && (
+        {formData.tipoPeticao === "consumidor" && (
           <>
             <div>
-              <span className="font-medium">Número do Processo:</span> {formData.numeroProcesso}
+              <span className="font-medium">Tipo de Relação:</span> {formData.tipoRelacaoConsumo}
             </div>
             <div>
-              <span className="font-medium">Tipo de Recurso:</span> {formData.tipoRecurso}
+              <span className="font-medium">Data da Ocorrência:</span> {formData.dataOcorrencia}
             </div>
             <div>
-              <span className="font-medium">Razões do Recurso:</span>
-              <p className="mt-1 whitespace-pre-wrap">{formData.razoesRecurso}</p>
-            </div>
-          </>
-        )}
-
-        {formData.tipoPeticao === "execucao" && (
-          <>
-            <div>
-              <span className="font-medium">Título Executivo:</span> {formData.tituloExecutivo}
-            </div>
-            <div>
-              <span className="font-medium">Valor da Execução:</span> {formData.valorExecucao}
-            </div>
-            <div>
-              <span className="font-medium">Bens para Execução:</span>
-              <p className="mt-1 whitespace-pre-wrap">{formData.bensExecutados}</p>
-            </div>
-          </>
-        )}
-      </div>
-
-      {isCompleted && (
-        <div className="mt-6">
-          <Button
-            onClick={handleGerarDocumentos}
-            className="w-full"
-            variant="default"
-          >
-            Gerar Documentos (PDF e Word)
-          </Button>
-        </div>
-      )}
-    </motion.div>
-  );
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 0:
-        return renderTipoPeticao();
-      case 1:
-        return renderInformacoesPessoais();
-      case 2:
-        return renderDetalhesEspecificos();
-      case 3:
-        return renderRevisao();
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="w-full max-w-2xl mx-auto">
-      <StepIndicator steps={steps} currentStep={currentStep} />
-      
-      <div className="bg-white rounded-xl shadow-sm p-8">
-        <AnimatePresence mode="wait">
-          {renderStepContent()}
-        </AnimatePresence>
-
-        <div className="flex justify-between mt-8 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 0}
-            className="flex items-center"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Anterior
-          </Button>
-          
-          <Button
-            onClick={nextStep}
-            className="flex items-center"
-          >
-            {currentStep === steps.length - 1 ? "Finalizar" : "Próximo"}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default QuestionnaireForm;
+              <span className="font-medium">Produto/Serviço:</span>
