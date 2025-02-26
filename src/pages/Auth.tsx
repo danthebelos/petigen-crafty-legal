@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,8 @@ const Auth = () => {
         if (error) throw error;
         navigate("/questionnaire");
       } else {
+        console.log("Iniciando processo de cadastro...");
+        
         const { error: signUpError, data } = await supabase.auth.signUp({
           email,
           password,
@@ -45,6 +46,8 @@ const Auth = () => {
         if (signUpError) throw signUpError;
 
         if (data.user) {
+          console.log("Usuário criado, enviando email de boas-vindas...");
+          
           // Enviar email de boas-vindas
           const { error: welcomeEmailError } = await supabase.functions.invoke(
             "send-welcome-email",
@@ -60,6 +63,13 @@ const Auth = () => {
 
           if (welcomeEmailError) {
             console.error("Erro ao enviar email de boas-vindas:", welcomeEmailError);
+            toast({
+              variant: "destructive",
+              title: "Erro ao enviar email de boas-vindas",
+              description: welcomeEmailError.message,
+            });
+          } else {
+            console.log("Email de boas-vindas enviado com sucesso!");
           }
 
           toast({
@@ -69,6 +79,7 @@ const Auth = () => {
         }
       }
     } catch (error) {
+      console.error("Erro no processo de autenticação:", error);
       toast({
         variant: "destructive",
         title: "Erro",

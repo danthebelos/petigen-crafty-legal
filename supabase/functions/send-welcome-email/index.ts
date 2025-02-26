@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -12,14 +11,17 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const { user } = await req.json();
+    console.log("Recebido pedido de envio de email para:", user);
 
     if (!user || !user.email || !user.nome_completo) {
+      console.error("Dados do usuário incompletos:", user);
       throw new Error("Dados do usuário incompletos");
     }
 
@@ -45,6 +47,7 @@ serve(async (req) => {
             
             <h3>Próximos Passos:</h3>
             <ul>
+              <li>Confirme seu email clicando no link enviado separadamente pelo Supabase</li>
               <li>Acesse sua conta: <a href="https://app.petigen.com" style="color: #4299e1;">Clique aqui</a> para acessar o Petigen</li>
               <li>Explore o software: Confira nossos tutoriais e guias rápidos</li>
             </ul>
@@ -74,7 +77,9 @@ serve(async (req) => {
       </html>
     `;
 
-    const { error: emailError } = await resend.emails.send({
+    console.log("Tentando enviar email...");
+    
+    const { data, error: emailError } = await resend.emails.send({
       from: 'Petigen <onboarding@resend.dev>',
       to: [user.email],
       subject: 'Bem-vindo(a) ao Petigen – Confirmação de Cadastro',
@@ -82,17 +87,21 @@ serve(async (req) => {
     });
 
     if (emailError) {
+      console.error("Erro ao enviar email:", emailError);
       throw emailError;
     }
 
+    console.log("Email enviado com sucesso:", data);
+
     return new Response(
-      JSON.stringify({ message: "Email de boas-vindas enviado com sucesso" }),
+      JSON.stringify({ message: "Email de boas-vindas enviado com sucesso", data }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
+    console.error("Erro na função send-welcome-email:", error);
     return new Response(
       JSON.stringify({
         error: error.message,
