@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import StepIndicator from "@/components/StepIndicator";
 import QuestionTooltip from "@/components/QuestionTooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 type AreaJuridica = 
   | "civil" 
@@ -56,6 +57,8 @@ declare global {
 const QuestionnaireForm = () => {
   const [passo, setPasso] = useState(1);
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+  const [enviandoParaIA, setEnviandoParaIA] = useState(false);
+  const { toast } = useToast();
   const [dadosQuestionario, setDadosQuestionario] = useState<DadosQuestionario>({
     cliente: {
       nome: "",
@@ -106,6 +109,7 @@ const QuestionnaireForm = () => {
 
   const confirmarEnvio = async () => {
     setConfirmacaoAberta(false);
+    setEnviandoParaIA(true);
     
     try {
       // Criar ID único para a petição
@@ -144,9 +148,20 @@ DETALHES ADICIONAIS:
 ${dadosQuestionario.detalhesAdicionais}
       `;
       
-      // Enviar para o chat
+      // Enviar para o chat automaticamente
       if (window.enviarMensagemParaChat) {
         window.enviarMensagemParaChat(mensagemFormatada);
+        
+        toast({
+          title: "Petição em elaboração",
+          description: "A IA está gerando sua petição com base nos dados informados.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Houve um problema ao comunicar com a IA. Por favor, tente novamente.",
+        });
       }
       
       // Limpar formulário
@@ -170,6 +185,13 @@ ${dadosQuestionario.detalhesAdicionais}
       
     } catch (erro) {
       console.error("Erro ao enviar dados:", erro);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Houve um problema ao processar sua petição. Por favor, tente novamente.",
+      });
+    } finally {
+      setEnviandoParaIA(false);
     }
   };
 
@@ -551,8 +573,8 @@ ${dadosQuestionario.detalhesAdicionais}
             <Button variant="outline" onClick={() => setConfirmacaoAberta(false)}>
               Editar
             </Button>
-            <Button onClick={confirmarEnvio}>
-              Confirmar e Enviar
+            <Button onClick={confirmarEnvio} disabled={enviandoParaIA}>
+              {enviandoParaIA ? "Enviando..." : "Confirmar e Enviar"}
             </Button>
           </DialogFooter>
         </DialogContent>

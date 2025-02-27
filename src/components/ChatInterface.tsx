@@ -180,8 +180,11 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                     width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
                     height: 100, // Altura recomendada em DXA
                   },
-                  type: "png", // Adicionar o tipo de imagem
-                  altText: "Cabeçalho" // Adicionar texto alternativo
+                  altText: {
+                    title: "Cabeçalho",
+                    description: "Imagem de cabeçalho do escritório",
+                    name: "Cabeçalho"
+                  }
                 }),
               ],
               alignment: AlignmentType.CENTER,
@@ -205,8 +208,11 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                     width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
                     height: 80,  // Altura recomendada em DXA
                   },
-                  type: "png", // Adicionar o tipo de imagem
-                  altText: "Rodapé" // Adicionar texto alternativo
+                  altText: {
+                    title: "Rodapé",
+                    description: "Imagem de rodapé do escritório",
+                    name: "Rodapé"
+                  }
                 }),
               ],
               alignment: AlignmentType.CENTER,
@@ -372,7 +378,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
         enviarMensagem();
       }, 100);
     };
-  }, []);
+  }, [mensagens]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'cabeçalho' | 'rodape') => {
     if (e.target.files && e.target.files[0]) {
