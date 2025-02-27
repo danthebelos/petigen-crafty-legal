@@ -16,7 +16,7 @@ const Index = () => {
           </p>
           <div className="flex justify-center gap-4">
             <Button asChild>
-              <Link to="/auth">Começar Agora</Link>
+              <Link to="/questionnaire">Começar Agora</Link>
             </Button>
           </div>
         </div>

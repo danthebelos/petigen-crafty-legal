@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Loader2, FileDown } from "lucide-react";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Bold, Italic } from "docx";
 
 interface Message {
   role: "user" | "assistant";
@@ -43,38 +43,128 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
     return <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatarTexto(content) }} />;
   };
 
-  const gerarDocumentoWord = async (texto: string) => {
-    // Dividir o texto em seções
-    const secoes = texto.split('\n\n');
-
-    const paragrafos = secoes.map(secao => {
-      // Detectar se é um título (todo em maiúsculas)
-      const ehTitulo = secao.trim().toUpperCase() === secao.trim();
-
-      return new Paragraph({
-        children: [
+  const processarTextoParaDocumentoWord = (texto: string) => {
+    // Dividir o texto em parágrafos
+    const paragrafos = texto.split('\n\n');
+    
+    return paragrafos.map(paragrafo => {
+      // Verificar se é um título (todo em maiúsculas)
+      const ehTitulo = paragrafo.trim() === paragrafo.trim().toUpperCase() && paragrafo.trim().length > 3;
+      
+      // Processar formatação de negrito e itálico
+      const segmentos = [];
+      let ultimoIndice = 0;
+      
+      // Processar negrito
+      const regexNegrito = /\*\*(.*?)\*\*/g;
+      let matchNegrito;
+      while ((matchNegrito = regexNegrito.exec(paragrafo)) !== null) {
+        // Adicionar texto antes do negrito
+        if (matchNegrito.index > ultimoIndice) {
+          segmentos.push(
+            new TextRun({
+              text: paragrafo.substring(ultimoIndice, matchNegrito.index),
+              size: ehTitulo ? 28 : 24,
+              bold: ehTitulo,
+            })
+          );
+        }
+        
+        // Adicionar texto em negrito
+        segmentos.push(
           new TextRun({
-            text: secao,
-            size: ehTitulo ? 28 : 24, // 14pt para títulos, 12pt para texto normal
+            text: matchNegrito[1], // O texto dentro dos asteriscos
+            size: ehTitulo ? 28 : 24,
+            bold: true,
+          })
+        );
+        
+        ultimoIndice = matchNegrito.index + matchNegrito[0].length;
+      }
+      
+      // Processar itálico no texto restante
+      const textoRestante = paragrafo.substring(ultimoIndice);
+      const regexItalico = /\*(.*?)\*/g;
+      let ultimoIndiceItalico = 0;
+      let matchItalico;
+      
+      const segmentosRestantes = [];
+      
+      while ((matchItalico = regexItalico.exec(textoRestante)) !== null) {
+        // Adicionar texto antes do itálico
+        if (matchItalico.index > ultimoIndiceItalico) {
+          segmentosRestantes.push(
+            new TextRun({
+              text: textoRestante.substring(ultimoIndiceItalico, matchItalico.index),
+              size: ehTitulo ? 28 : 24,
+              bold: ehTitulo,
+            })
+          );
+        }
+        
+        // Adicionar texto em itálico
+        segmentosRestantes.push(
+          new TextRun({
+            text: matchItalico[1], // O texto dentro dos asteriscos
+            size: ehTitulo ? 28 : 24,
+            italic: true,
+          })
+        );
+        
+        ultimoIndiceItalico = matchItalico.index + matchItalico[0].length;
+      }
+      
+      // Adicionar texto final se houver
+      if (ultimoIndiceItalico < textoRestante.length) {
+        segmentosRestantes.push(
+          new TextRun({
+            text: textoRestante.substring(ultimoIndiceItalico),
+            size: ehTitulo ? 28 : 24,
             bold: ehTitulo,
-          }),
-        ],
+          })
+        );
+      }
+      
+      // Se não houver formatação, adicionar o texto completo
+      if (segmentos.length === 0 && segmentosRestantes.length === 0) {
+        segmentos.push(
+          new TextRun({
+            text: paragrafo,
+            size: ehTitulo ? 28 : 24,
+            bold: ehTitulo,
+          })
+        );
+      } else if (segmentosRestantes.length > 0) {
+        segmentos.push(...segmentosRestantes);
+      }
+      
+      return new Paragraph({
+        children: segmentos,
         spacing: {
           after: 400,
           before: ehTitulo ? 400 : 200,
         },
-        alignment: ehTitulo ? AlignmentType.CENTER : AlignmentType.LEFT,
+        alignment: ehTitulo ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
       });
     });
+  };
 
+  const gerarDocumentoWord = async (texto: string) => {
+    const paragrafos = processarTextoParaDocumentoWord(texto);
+    
     return new Document({
       sections: [
         {
           properties: {},
           children: [
             new Paragraph({
-              text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
-              heading: HeadingLevel.HEADING_1,
+              children: [
+                new TextRun({
+                  text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
+                  size: 28,
+                  bold: true,
+                }),
+              ],
               spacing: { after: 400 },
               alignment: AlignmentType.CENTER,
             }),
@@ -101,18 +191,23 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       setMensagens([...mensagens, novaMensagemUsuario]);
       setMensagem("");
 
+      const instrucoes = `Gere uma petição extremamente fundamentada e extensa, com pelo menos 10 páginas. Inclua:
+      1. Todos os aspectos legais relevantes, incluindo legislação completa e atualizada, jurisprudência dos Tribunais Superiores (STF e STJ), doutrina de autores renomados com citações diretas
+      2. Utilize **negrito** para pontos importantes, termos jurídicos, artigos de lei e nomes de precedentes
+      3. Use *itálico* para citações diretas de doutrina, jurisprudência e trechos de legislação
+      4. Organize em seções claras e bem estruturadas: FATOS, FUNDAMENTOS JURÍDICOS (subdividido por temas), PRECEDENTES JUDICIAIS, PEDIDOS
+      5. Use numeração detalhada para os pedidos
+      6. Inclua pelo menos 5 citações de jurisprudência recente e relevante com ementa completa
+      7. Faça referência específica a pelo menos 15 artigos diferentes de leis aplicáveis
+      8. Fundamente cada argumento com pelo menos uma fonte doutrinária, uma fonte jurisprudencial e embasamento legal
+      9. Inclua argumentação profunda sobre a constitucionalidade da questão quando relevante
+      10. Mencione princípios jurídicos aplicáveis ao caso com fundamentação constitucional`;
+
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
         body: { 
           mensagem: mensagemParaEnviar, 
           contexto,
-          instrucoes: `Gere uma petição extremamente fundamentada. Inclua:
-          1. Todos os aspectos legais relevantes, incluindo legislação, jurisprudência e doutrina
-          2. Formatação adequada com **negrito** para destaques importantes e *itálico* para citações
-          3. Organize em seções claras: FATOS, DIREITO, PEDIDOS
-          4. Use numeração para os pedidos
-          5. Inclua citações de jurisprudência recente
-          6. Faça referência a artigos específicos das leis aplicáveis
-          7. Fundamente cada argumento com pelo menos uma fonte legal`
+          instrucoes
         },
       });
 
