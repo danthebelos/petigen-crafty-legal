@@ -6,7 +6,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Loader2, FileDown } from "lucide-react";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Bold, Italic } from "docx";
+import { 
+  Document, 
+  Packer, 
+  Paragraph, 
+  TextRun, 
+  AlignmentType, 
+  Header, 
+  Footer,
+  ImageRun
+} from "docx";
 
 interface Message {
   role: "user" | "assistant";
@@ -29,6 +38,8 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const [mensagens, setMensagens] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [peticaoPronta, setPeticaoPronta] = useState(false);
+  const [cabeçalhoImagem, setCabeçalhoImagem] = useState<File | null>(null);
+  const [rodapeImagem, setRodapeImagem] = useState<File | null>(null);
   const { toast } = useToast();
 
   const formatarTexto = (texto: string) => {
@@ -107,7 +118,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
           new TextRun({
             text: matchItalico[1], // O texto dentro dos asteriscos
             size: ehTitulo ? 28 : 24,
-            italic: true,
+            italics: true, // Corrigido para 'italics' em vez de 'italic'
           })
         );
         
@@ -152,10 +163,70 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const gerarDocumentoWord = async (texto: string) => {
     const paragrafos = processarTextoParaDocumentoWord(texto);
     
+    let header = undefined;
+    let footer = undefined;
+
+    // Adicionar cabeçalho se existir uma imagem
+    if (cabeçalhoImagem) {
+      const cabeçalhoBuffer = await cabeçalhoImagem.arrayBuffer();
+      header = {
+        default: new Header({
+          children: [
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: new Uint8Array(cabeçalhoBuffer),
+                  transformation: {
+                    width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
+                    height: 100, // Altura recomendada em DXA
+                  },
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+        }),
+      };
+    }
+
+    // Adicionar rodapé se existir uma imagem
+    if (rodapeImagem) {
+      const rodapeBuffer = await rodapeImagem.arrayBuffer();
+      footer = {
+        default: new Footer({
+          children: [
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: new Uint8Array(rodapeBuffer),
+                  transformation: {
+                    width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
+                    height: 80,  // Altura recomendada em DXA
+                  },
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+        }),
+      };
+    }
+    
     return new Document({
       sections: [
         {
-          properties: {},
+          properties: {
+            page: {
+              margin: {
+                top: 1400, // Margem superior maior para acomodar o cabeçalho
+                right: 1000,
+                bottom: 1200, // Margem inferior maior para acomodar o rodapé
+                left: 1000,
+              },
+            },
+          },
+          headers: header,
+          footers: footer,
           children: [
             new Paragraph({
               children: [
@@ -191,17 +262,19 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
       setMensagens([...mensagens, novaMensagemUsuario]);
       setMensagem("");
 
-      const instrucoes = `Gere uma petição extremamente fundamentada e extensa, com pelo menos 10 páginas. Inclua:
+      const instrucoes = `Gere uma petição extremamente fundamentada e extensa, com pelo menos 15 páginas. Inclua:
       1. Todos os aspectos legais relevantes, incluindo legislação completa e atualizada, jurisprudência dos Tribunais Superiores (STF e STJ), doutrina de autores renomados com citações diretas
       2. Utilize **negrito** para pontos importantes, termos jurídicos, artigos de lei e nomes de precedentes
       3. Use *itálico* para citações diretas de doutrina, jurisprudência e trechos de legislação
       4. Organize em seções claras e bem estruturadas: FATOS, FUNDAMENTOS JURÍDICOS (subdividido por temas), PRECEDENTES JUDICIAIS, PEDIDOS
       5. Use numeração detalhada para os pedidos
-      6. Inclua pelo menos 5 citações de jurisprudência recente e relevante com ementa completa
-      7. Faça referência específica a pelo menos 15 artigos diferentes de leis aplicáveis
-      8. Fundamente cada argumento com pelo menos uma fonte doutrinária, uma fonte jurisprudencial e embasamento legal
+      6. Inclua pelo menos 8 citações de jurisprudência recente e relevante com ementa completa
+      7. Faça referência específica a pelo menos 20 artigos diferentes de leis aplicáveis
+      8. Fundamente cada argumento com pelo menos duas fontes doutrinárias, duas fontes jurisprudenciais e embasamento legal
       9. Inclua argumentação profunda sobre a constitucionalidade da questão quando relevante
-      10. Mencione princípios jurídicos aplicáveis ao caso com fundamentação constitucional`;
+      10. Mencione princípios jurídicos aplicáveis ao caso com fundamentação constitucional
+      11. Inclua referências a tratados internacionais pertinentes quando aplicável
+      12. Cite pelo menos 5 obras doutrinárias diferentes com nome completo do autor, obra, ano e página`;
 
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
         body: { 
@@ -297,6 +370,25 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
     };
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'cabeçalho' | 'rodape') => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (tipo === 'cabeçalho') {
+        setCabeçalhoImagem(file);
+        toast({
+          title: "Imagem do cabeçalho selecionada",
+          description: `Arquivo: ${file.name}`,
+        });
+      } else {
+        setRodapeImagem(file);
+        toast({
+          title: "Imagem do rodapé selecionada",
+          description: `Arquivo: ${file.name}`,
+        });
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-xl shadow-sm">
       <ScrollArea className="flex-1 p-4">
@@ -329,14 +421,46 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
 
       <div className="p-4 border-t space-y-4">
         {peticaoPronta && (
-          <Button
-            onClick={handleFinalizarPeticao}
-            className="w-full flex items-center justify-center gap-2"
-            variant="default"
-          >
-            <FileDown className="h-4 w-4" />
-            Finalizar e Gerar Petição
-          </Button>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-sm mb-2 text-zinc-600">Cabeçalho (Recomendado: 2000x350px)</p>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'cabeçalho')}
+                  className="text-sm"
+                />
+                {cabeçalhoImagem && (
+                  <p className="mt-1 text-xs text-green-600">
+                    Cabeçalho: {cabeçalhoImagem.name}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm mb-2 text-zinc-600">Rodapé (Recomendado: 2000x250px)</p>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'rodape')}
+                  className="text-sm"
+                />
+                {rodapeImagem && (
+                  <p className="mt-1 text-xs text-green-600">
+                    Rodapé: {rodapeImagem.name}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={handleFinalizarPeticao}
+              className="w-full flex items-center justify-center gap-2"
+              variant="default"
+            >
+              <FileDown className="h-4 w-4" />
+              Finalizar e Gerar Petição
+            </Button>
+          </>
         )}
         
         <form onSubmit={enviarMensagem} className="flex gap-2">
