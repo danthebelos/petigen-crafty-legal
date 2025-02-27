@@ -118,7 +118,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
           new TextRun({
             text: matchItalico[1], // O texto dentro dos asteriscos
             size: ehTitulo ? 28 : 24,
-            italics: true, // Corrigido para 'italics' em vez de 'italic'
+            italics: true,
           })
         );
         
@@ -168,58 +168,82 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
 
     // Adicionar cabeçalho se existir uma imagem
     if (cabeçalhoImagem) {
-      const cabeçalhoBuffer = await cabeçalhoImagem.arrayBuffer();
-      header = {
-        default: new Header({
-          children: [
-            new Paragraph({
-              children: [
-                new ImageRun({
-                  data: new Uint8Array(cabeçalhoBuffer),
-                  transformation: {
-                    width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
-                    height: 100, // Altura recomendada em DXA
-                  },
-                  altText: {
-                    title: "Cabeçalho",
-                    description: "Imagem de cabeçalho do escritório",
-                    name: "Cabeçalho"
-                  }
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-          ],
-        }),
-      };
+      try {
+        const cabeçalhoBuffer = await cabeçalhoImagem.arrayBuffer();
+        const imageExtension = getImageFileExtension(cabeçalhoImagem.name);
+        
+        header = {
+          default: new Header({
+            children: [
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: new Uint8Array(cabeçalhoBuffer),
+                    transformation: {
+                      width: 600,
+                      height: 100,
+                    },
+                    type: imageExtension, // Definir o tipo baseado na extensão
+                    altText: {
+                      title: "Cabeçalho",
+                      description: "Imagem de cabeçalho do escritório",
+                      name: "Cabeçalho"
+                    }
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          }),
+        };
+      } catch (error) {
+        console.error("Erro ao processar imagem de cabeçalho:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro no cabeçalho",
+          description: "Não foi possível inserir a imagem de cabeçalho.",
+        });
+      }
     }
 
     // Adicionar rodapé se existir uma imagem
     if (rodapeImagem) {
-      const rodapeBuffer = await rodapeImagem.arrayBuffer();
-      footer = {
-        default: new Footer({
-          children: [
-            new Paragraph({
-              children: [
-                new ImageRun({
-                  data: new Uint8Array(rodapeBuffer),
-                  transformation: {
-                    width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
-                    height: 80,  // Altura recomendada em DXA
-                  },
-                  altText: {
-                    title: "Rodapé",
-                    description: "Imagem de rodapé do escritório",
-                    name: "Rodapé"
-                  }
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-          ],
-        }),
-      };
+      try {
+        const rodapeBuffer = await rodapeImagem.arrayBuffer();
+        const imageExtension = getImageFileExtension(rodapeImagem.name);
+        
+        footer = {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: new Uint8Array(rodapeBuffer),
+                    transformation: {
+                      width: 600,
+                      height: 80,
+                    },
+                    type: imageExtension, // Definir o tipo baseado na extensão
+                    altText: {
+                      title: "Rodapé",
+                      description: "Imagem de rodapé do escritório",
+                      name: "Rodapé"
+                    }
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          }),
+        };
+      } catch (error) {
+        console.error("Erro ao processar imagem de rodapé:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro no rodapé",
+          description: "Não foi possível inserir a imagem de rodapé.",
+        });
+      }
     }
     
     return new Document({
@@ -254,6 +278,22 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
         },
       ],
     });
+  };
+
+  // Função para determinar o tipo de imagem com base na extensão do arquivo
+  const getImageFileExtension = (filename: string): "jpeg" | "png" | "gif" | "bmp" => {
+    const extension = filename.split('.').pop()?.toLowerCase() || "";
+    
+    if (extension === "jpg" || extension === "jpeg") {
+      return "jpeg";
+    } else if (extension === "gif") {
+      return "gif";
+    } else if (extension === "bmp") {
+      return "bmp";
+    } else {
+      // Para outras extensões ou desconhecidas, assumir png como padrão seguro
+      return "png";
+    }
   };
 
   const enviarMensagem = async (e?: React.FormEvent) => {
@@ -383,6 +423,18 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'cabeçalho' | 'rodape') => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Verificar se é um tipo de imagem válido
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
+      if (!validImageTypes.includes(file.type)) {
+        toast({
+          variant: "destructive",
+          title: "Formato inválido",
+          description: "Por favor, selecione uma imagem nos formatos: JPG, PNG, GIF ou BMP.",
+        });
+        return;
+      }
+      
       if (tipo === 'cabeçalho') {
         setCabeçalhoImagem(file);
         toast({
@@ -437,7 +489,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                 <p className="text-sm mb-2 text-zinc-600">Cabeçalho (Recomendado: 2000x350px)</p>
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif,image/bmp"
                   onChange={(e) => handleFileChange(e, 'cabeçalho')}
                   className="text-sm"
                 />
@@ -451,7 +503,7 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                 <p className="text-sm mb-2 text-zinc-600">Rodapé (Recomendado: 2000x250px)</p>
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif,image/bmp"
                   onChange={(e) => handleFileChange(e, 'rodape')}
                   className="text-sm"
                 />
