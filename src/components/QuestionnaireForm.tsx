@@ -72,6 +72,8 @@ const QuestionnaireForm = () => {
     urgencia: "media",
   });
 
+  const passos = ["Dados do Cliente", "Detalhes do Processo", "Fatos", "Pedidos"];
+
   const passoAnterior = () => {
     if (passo > 1) setPasso(passo - 1);
   };
@@ -211,7 +213,7 @@ ${dadosQuestionario.detalhesAdicionais}
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <StepIndicator currentStep={passo} totalSteps={4} />
+      <StepIndicator steps={passos} currentStep={passo - 1} />
 
       <motion.div
         key={`passo-${passo}`}

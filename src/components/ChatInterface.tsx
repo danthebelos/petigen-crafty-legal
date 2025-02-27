@@ -180,6 +180,8 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                     width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
                     height: 100, // Altura recomendada em DXA
                   },
+                  type: "png", // Adicionar o tipo de imagem
+                  altText: "Cabeçalho" // Adicionar texto alternativo
                 }),
               ],
               alignment: AlignmentType.CENTER,
@@ -203,6 +205,8 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
                     width: 600, // Largura recomendada em DXA (aproximadamente 6 polegadas)
                     height: 80,  // Altura recomendada em DXA
                   },
+                  type: "png", // Adicionar o tipo de imagem
+                  altText: "Rodapé" // Adicionar texto alternativo
                 }),
               ],
               alignment: AlignmentType.CENTER,
