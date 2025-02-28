@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const Questionnaire = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+  const [generatedPetition, setGeneratedPetition] = useState<string | null>(null);
 
   const templates = [
     {

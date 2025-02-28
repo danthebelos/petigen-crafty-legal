@@ -28,6 +28,7 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
   const [petitionType, setPetitionType] = useState<string>("");
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
+  const [generatedPetition, setGeneratedPetition] = useState<string | null>(null);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -59,13 +60,73 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
     
     setLoading(true);
     
-    // Simulando envio do formulário
+    // Simulando a geração da petição com IA
     setTimeout(() => {
       setLoading(false);
       
+      // Simulação da petição gerada pela IA
+      const petition = `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DO TRABALHO DA ___ VARA DO TRABALHO DE _____________
+        
+        ${formData.nomeReclamante || 'NOME DO RECLAMANTE'}, brasileiro(a), ${formData.estadoCivilReclamante || 'estado civil'}, portador(a) do RG nº ${formData.rgReclamante || 'número'} e CPF nº ${formData.cpfReclamante || 'número'}, residente e domiciliado(a) na ${formData.enderecoReclamante || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        
+        RECLAMAÇÃO TRABALHISTA
+        COM PEDIDO DE TUTELA DE URGÊNCIA
+        
+        em face de ${formData.razaoSocialReclamada || 'NOME DA RECLAMADA'}, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ${formData.cnpjReclamada || 'número'}, com sede na ${formData.enderecoReclamada || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        O(A) Reclamante foi admitido(a) pela Reclamada em ${formData.dataAdmissao || 'data'}, para exercer a função de ${formData.funcao || 'função'}, recebendo como último salário o valor de R$ ${formData.ultimoSalario || 'valor'}.
+        
+        [Continua com descrição detalhada dos fatos, fundamentação jurídica e pedidos baseados nos dados fornecidos]
+        
+        II - DO DIREITO
+        
+        [Extensa fundamentação jurídica com base na legislação trabalhista, jurisprudência e doutrina]
+        
+        III - DOS PEDIDOS
+        
+        Ante o exposto, requer a procedência dos pedidos para condenar a Reclamada a pagar ao Reclamante:
+        
+        ${formData.verbasRescisorias ? `a) Verbas rescisórias não pagas, especificamente: ${formData.verbasRescisoriasDetalhe || ''};` : ''}
+        ${formData.horasExtras ? `b) Horas extras e reflexos, considerando: ${formData.horasExtrasDetalhe || ''};` : ''}
+        ${formData.adicionalNoturno ? `c) Adicional noturno e reflexos, referente a: ${formData.adicionalNoturnoDetalhe || ''};` : ''}
+        ${formData.adicionalInsalubridade ? 'd) Adicional de insalubridade/periculosidade e reflexos;' : ''}
+        ${formData.equiparacaoSalarial ? `e) Diferenças salariais por equiparação salarial com o paradigma ${formData.equiparacaoSalarialDetalhe || ''};` : ''}
+        ${formData.danosMorais ? `f) Indenização por danos morais no valor de R$ 20.000,00, pelos seguintes fatos: ${formData.danosMoraisDetalhe || ''};` : ''}
+        ${formData.outrosPedidos ? `g) ${formData.outrosPedidosDetalhe || ''};` : ''}
+        
+        h) Juros e correção monetária;
+        i) Honorários advocatícios de sucumbência;
+        j) Demais direitos decorrentes da relação de emprego.
+        
+        IV - DOS REQUERIMENTOS
+        
+        Requer-se:
+        
+        a) A notificação da Reclamada para, querendo, apresentar defesa, sob pena de revelia e confissão;
+        b) A produção de todas as provas em direito admitidas, especialmente depoimento pessoal do representante legal da Reclamada, sob pena de confissão, oitiva de testemunhas, juntada de documentos e perícias;
+        c) A condenação da Reclamada ao pagamento das custas processuais e demais despesas;
+        d) Os benefícios da justiça gratuita, por não possuir condições de arcar com as custas do processo sem prejuízo do sustento próprio e de sua família;
+        
+        Dá-se à causa o valor de R$ 50.000,00 para efeitos fiscais.
+        
+        Termos em que,
+        Pede deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
+      
+      // Armazenar a petição gerada
+      setGeneratedPetition(petition);
+      
       toast({
         title: "Petição gerada com sucesso!",
-        description: "Selecione um modelo para finalizar sua petição."
+        description: "Agora você pode escolher um modelo para sua petição."
       });
       
       if (onFinalize) {
@@ -1041,7 +1102,7 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
                     <span>Gerando petição...</span>
                   </div>
                 ) : (
-                  "Finalizar petição"
+                  "Gerar petição com IA"
                 )}
               </Button>
             </div>
