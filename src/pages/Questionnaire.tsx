@@ -4,90 +4,15 @@ import { motion } from "framer-motion";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 import ChatInterface from "@/components/ChatInterface";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Circle, Square, Triangle, Diamond, Check, Hexagon, Octagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const Questionnaire = () => {
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+  const { toast } = useToast();
   const [generatedPetition, setGeneratedPetition] = useState<string | null>(null);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
-
-  const templates = [
-    {
-      id: 1,
-      name: "Clássico Preto",
-      icon: <Octagon className="h-6 w-6" />,
-      description: "Design elegante e formal com tons de preto",
-      color: "bg-zinc-900 text-white",
-      gradient: "bg-gradient-to-b from-zinc-900 to-zinc-800",
-      highlight: "border-l-4 border-zinc-500",
-      preview: "bg-gradient-to-b from-zinc-900 to-zinc-800"
-    },
-    {
-      id: 2,
-      name: "Carvão Moderno",
-      icon: <Square className="h-6 w-6" />,
-      description: "Design contemporâneo com tons de carvão",
-      color: "bg-zinc-800 text-zinc-100",
-      gradient: "bg-gradient-to-b from-zinc-800 to-zinc-700",
-      highlight: "border-l-4 border-zinc-400",
-      preview: "bg-gradient-to-b from-zinc-800 to-zinc-700"
-    },
-    {
-      id: 3,
-      name: "Grafite Profissional",
-      icon: <Triangle className="h-6 w-6" />,
-      description: "Visual profissional em tons de grafite",
-      color: "bg-zinc-700 text-zinc-100",
-      gradient: "bg-gradient-to-b from-zinc-700 to-zinc-600",
-      highlight: "border-l-4 border-zinc-300",
-      preview: "bg-gradient-to-b from-zinc-700 to-zinc-600"
-    },
-    {
-      id: 4,
-      name: "Cinza Neutro",
-      icon: <Diamond className="h-6 w-6" />,
-      description: "Design equilibrado com tons neutros de cinza",
-      color: "bg-zinc-600 text-white",
-      gradient: "bg-gradient-to-b from-zinc-600 to-zinc-500",
-      highlight: "border-l-4 border-zinc-300",
-      preview: "bg-gradient-to-b from-zinc-600 to-zinc-500"
-    },
-    {
-      id: 5,
-      name: "Índigo Escuro",
-      icon: <Hexagon className="h-6 w-6" />,
-      description: "Visual sofisticado com tons de índigo",
-      color: "bg-indigo-900 text-white",
-      gradient: "bg-gradient-to-b from-indigo-900 to-indigo-800",
-      highlight: "border-l-4 border-indigo-500",
-      preview: "bg-gradient-to-b from-indigo-900 to-indigo-800"
-    },
-    {
-      id: 6,
-      name: "Azul Marinho",
-      icon: <Circle className="h-6 w-6" />,
-      description: "Design clássico em azul marinho",
-      color: "bg-blue-900 text-white",
-      gradient: "bg-gradient-to-b from-blue-900 to-blue-800",
-      highlight: "border-l-4 border-blue-500",
-      preview: "bg-gradient-to-b from-blue-900 to-blue-800"
-    },
-    {
-      id: 7,
-      name: "Azul Profissional",
-      icon: <Circle className="h-6 w-6" />,
-      description: "Design moderno em azul vibrante",
-      color: "bg-blue-700 text-white",
-      gradient: "bg-gradient-to-b from-blue-700 to-blue-600",
-      highlight: "border-l-4 border-blue-300",
-      preview: "bg-gradient-to-b from-blue-700 to-blue-600"
-    }
-  ];
 
   const handleFormSubmit = (data: Record<string, any>) => {
     setFormData(data);
@@ -100,42 +25,56 @@ const Questionnaire = () => {
 
   const handleGeneratePetition = () => {
     setIsAIDialogOpen(true);
-    // Aqui seria a lógica para enviar os dados para a IA
-    // e receber a petição gerada
+    // Lógica para enviar os dados para a IA e receber a petição gerada
     
     // Simulando o tempo de processamento da IA
     setTimeout(() => {
-      const petitionText = `
+      const petitionText = generatePetitionText(formData);
+      setGeneratedPetition(petitionText);
+      setIsAIDialogOpen(false);
+
+      toast({
+        title: "Petição gerada com sucesso",
+        description: "Agora você pode conversar com a IA para refinar sua petição.",
+      });
+    }, 3000);
+  };
+
+  // Função auxiliar para gerar texto da petição baseado no tipo
+  const generatePetitionText = (data: Record<string, any>): string => {
+    switch(data.tipo) {
+      case "trabalhista":
+        return `
         EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DO TRABALHO DA ___ VARA DO TRABALHO DE _____________
         
-        ${formData.nomeReclamante || 'NOME DO RECLAMANTE'}, brasileiro(a), ${formData.estadoCivilReclamante || 'estado civil'}, portador(a) do RG nº ${formData.rgReclamante || 'número'} e CPF nº ${formData.cpfReclamante || 'número'}, residente e domiciliado(a) na ${formData.enderecoReclamante || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        ${data.nomeReclamante || 'NOME DO RECLAMANTE'}, brasileiro(a), ${data.estadoCivilReclamante || 'estado civil'}, portador(a) do RG nº ${data.rgReclamante || 'número'} e CPF nº ${data.cpfReclamante || 'número'}, residente e domiciliado(a) na ${data.enderecoReclamante || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
         
         RECLAMAÇÃO TRABALHISTA
         COM PEDIDO DE TUTELA DE URGÊNCIA
         
-        em face de ${formData.razaoSocialReclamada || 'NOME DA RECLAMADA'}, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ${formData.cnpjReclamada || 'número'}, com sede na ${formData.enderecoReclamada || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
+        em face de ${data.razaoSocialReclamada || 'NOME DA RECLAMADA'}, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ${data.cnpjReclamada || 'número'}, com sede na ${data.enderecoReclamada || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
         
         I - DOS FATOS
         
-        O(A) Reclamante foi admitido(a) pela Reclamada em ${formData.dataAdmissao || 'data'}, para exercer a função de ${formData.funcao || 'função'}, recebendo como último salário o valor de R$ ${formData.ultimoSalario || 'valor'}.
+        O(A) Reclamante foi admitido(a) pela Reclamada em ${data.dataAdmissao || 'data'}, para exercer a função de ${data.funcao || 'função'}, recebendo como último salário o valor de R$ ${data.ultimoSalario || 'valor'}.
         
-        [Continua com descrição detalhada dos fatos, fundamentação jurídica e pedidos baseados nos dados fornecidos]
+        [Descrição detalhada dos fatos com base nos dados fornecidos]
         
         II - DO DIREITO
         
-        [Extensa fundamentação jurídica com base na legislação trabalhista, jurisprudência e doutrina]
+        [Fundamentação jurídica baseada na legislação trabalhista]
         
         III - DOS PEDIDOS
         
         Ante o exposto, requer a procedência dos pedidos para condenar a Reclamada a pagar ao Reclamante:
         
-        ${formData.verbasRescisorias ? `a) Verbas rescisórias não pagas, especificamente: ${formData.verbasRescisoriasDetalhe || ''};` : ''}
-        ${formData.horasExtras ? `b) Horas extras e reflexos, considerando: ${formData.horasExtrasDetalhe || ''};` : ''}
-        ${formData.adicionalNoturno ? `c) Adicional noturno e reflexos, referente a: ${formData.adicionalNoturnoDetalhe || ''};` : ''}
-        ${formData.adicionalInsalubridade ? 'd) Adicional de insalubridade/periculosidade e reflexos;' : ''}
-        ${formData.equiparacaoSalarial ? `e) Diferenças salariais por equiparação salarial com o paradigma ${formData.equiparacaoSalarialDetalhe || ''};` : ''}
-        ${formData.danosMorais ? `f) Indenização por danos morais no valor de R$ 20.000,00, pelos seguintes fatos: ${formData.danosMoraisDetalhe || ''};` : ''}
-        ${formData.outrosPedidos ? `g) ${formData.outrosPedidosDetalhe || ''};` : ''}
+        ${data.verbasRescisorias ? `a) Verbas rescisórias não pagas, especificamente: ${data.verbasRescisoriasDetalhe || ''};` : ''}
+        ${data.horasExtras ? `b) Horas extras e reflexos, considerando: ${data.horasExtrasDetalhe || ''};` : ''}
+        ${data.adicionalNoturno ? `c) Adicional noturno e reflexos, referente a: ${data.adicionalNoturnoDetalhe || ''};` : ''}
+        ${data.adicionalInsalubridade ? 'd) Adicional de insalubridade/periculosidade e reflexos;' : ''}
+        ${data.equiparacaoSalarial ? `e) Diferenças salariais por equiparação salarial com o paradigma ${data.equiparacaoSalarialDetalhe || ''};` : ''}
+        ${data.danosMorais ? `f) Indenização por danos morais no valor de R$ 20.000,00, pelos seguintes fatos: ${data.danosMoraisDetalhe || ''};` : ''}
+        ${data.outrosPedidos ? `g) ${data.outrosPedidosDetalhe || ''};` : ''}
         
         h) Juros e correção monetária;
         i) Honorários advocatícios de sucumbência;
@@ -143,14 +82,7 @@ const Questionnaire = () => {
         
         IV - DOS REQUERIMENTOS
         
-        Requer-se:
-        
-        a) A notificação da Reclamada para, querendo, apresentar defesa, sob pena de revelia e confissão;
-        b) A produção de todas as provas em direito admitidas, especialmente depoimento pessoal do representante legal da Reclamada, sob pena de confissão, oitiva de testemunhas, juntada de documentos e perícias;
-        c) A condenação da Reclamada ao pagamento das custas processuais e demais despesas;
-        d) Os benefícios da justiça gratuita, por não possuir condições de arcar com as custas do processo sem prejuízo do sustento próprio e de sua família;
-        
-        Dá-se à causa o valor de R$ 50.000,00 para efeitos fiscais.
+        [Requerimentos processuais padrão]
         
         Termos em que,
         Pede deferimento.
@@ -160,23 +92,198 @@ const Questionnaire = () => {
         [Advogado]
         OAB/XX nº XXXXX
       `;
-      
-      setGeneratedPetition(petitionText);
-      setIsAIDialogOpen(false);
-    }, 3000);
-  };
 
-  const handleFinalizePetition = () => {
-    setShowTemplates(true);
-  };
+      case "indenizatoria":
+        return `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ___ VARA CÍVEL DA COMARCA DE _____________
+        
+        ${data.nomeAutor || 'NOME DO AUTOR'}, brasileiro(a), ${data.estadoCivilAutor || 'estado civil'}, ${data.profissaoAutor || 'profissão'}, portador(a) do RG nº ${data.rgAutor || 'número'} e CPF nº ${data.cpfAutor || 'número'}, residente e domiciliado(a) na ${data.enderecoAutor || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        
+        AÇÃO DE INDENIZAÇÃO POR DANOS MORAIS E MATERIAIS
+        
+        em face de ${data.nomeReu || 'NOME DO RÉU'}, pessoa ${data.cpfCnpjReu?.length > 14 ? 'jurídica' : 'física'}, inscrito(a) no ${data.cpfCnpjReu?.length > 14 ? 'CNPJ' : 'CPF'} sob o nº ${data.cpfCnpjReu || 'número'}, com ${data.cpfCnpjReu?.length > 14 ? 'sede' : 'residência'} na ${data.enderecoReu || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        [Descrição detalhada dos fatos com base na data do evento, local, lesões sofridas e outros dados fornecidos]
+        
+        II - DO DIREITO
+        
+        [Fundamentação jurídica da responsabilidade civil]
+        
+        III - DOS DANOS SOFRIDOS E DO PEDIDO DE INDENIZAÇÃO
+        
+        [Detalhamento dos danos morais, materiais e pedidos específicos com base nos valores informados]
+        
+        IV - DOS PEDIDOS
+        
+        Ante o exposto, requer:
+        
+        a) A citação do(a) Réu(Ré) para, querendo, contestar a presente ação;
+        b) A procedência dos pedidos para condenar o(a) Réu(Ré) ao pagamento de:
+            ${data.danoMaterial ? `- Indenização por danos materiais no valor de R$ ${data.valorPrejuizo || '0,00'};` : ''}
+            ${data.danoMoral ? `- Indenização por danos morais no valor de R$ ${data.valorDanosMorais || '0,00'};` : ''}
+            ${data.danoEstetico ? `- Indenização por danos estéticos no valor de R$ ${data.valorDanoEstetico || '0,00'};` : ''}
+        c) A condenação do(a) Réu(Ré) ao pagamento das custas processuais e honorários advocatícios;
+        d) A produção de todas as provas em direito admitidas.
+        
+        Dá-se à causa o valor de R$ ${
+          (parseFloat(data.valorDanosMorais || '0') + 
+           parseFloat(data.valorDanosMateriais || '0') + 
+           parseFloat(data.valorDanoEstetico || '0')).toFixed(2) || '0,00'
+        }.
+        
+        Termos em que,
+        Pede deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
 
-  const handleSelectTemplate = (id: number) => {
-    setSelectedTemplate(id);
-    // Aqui você pode adicionar lógica para aplicar o template selecionado
-    setTimeout(() => {
-      setShowTemplates(false);
-      // Adicionar lógica para download ou finalização da petição com o template selecionado
-    }, 500);
+      case "divorcio":
+        return `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ___ VARA DE FAMÍLIA DA COMARCA DE _____________
+        
+        [NOME DO REQUERENTE], brasileiro(a), [estado civil], [profissão], portador(a) do RG nº [número] e CPF nº [número], residente e domiciliado(a) na [endereço completo], vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        
+        AÇÃO DE DIVÓRCIO CONSENSUAL
+        
+        em conjunto com [NOME DO CÔNJUGE], brasileiro(a), [estado civil], [profissão], portador(a) do RG nº [número] e CPF nº [número], residente e domiciliado(a) na [endereço completo], pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        Os requerentes contraíram matrimônio em [data do casamento], conforme certidão de casamento que segue anexa, sob o regime de [regime de bens].
+        
+        O casal possui [número] filhos, sendo eles: [nomes e idades dos filhos, se houver].
+        
+        Os cônjuges encontram-se separados de fato desde [data da separação de fato], não havendo possibilidade de reconciliação.
+        
+        II - DO ACORDO QUANTO AOS ALIMENTOS, GUARDA E VISITAS DOS FILHOS
+        
+        [Detalhes sobre guarda, visitas e pensão alimentícia, se houver filhos]
+        
+        III - DA PARTILHA DE BENS
+        
+        [Detalhes sobre a partilha de bens e dívidas]
+        
+        IV - DO DIREITO
+        
+        [Fundamentação jurídica com base na EC 66/2010 e Código Civil]
+        
+        V - DOS PEDIDOS
+        
+        Ante o exposto, requerem:
+        
+        a) A homologação do presente acordo de divórcio, com a consequente dissolução do vínculo matrimonial;
+        b) A homologação do acordo quanto à guarda, visitas e alimentos dos filhos menores;
+        c) A homologação da partilha de bens e dívidas conforme acordado;
+        d) A expedição do mandado de averbação ao Cartório de Registro Civil competente;
+        e) [Se for o caso] A volta do uso do nome de solteiro(a) por parte de [nome do cônjuge que deseja voltar a usar o nome de solteiro].
+        
+        Dá-se à causa o valor de R$ [valor].
+        
+        Termos em que,
+        Pedem deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
+
+      case "habeas-corpus":
+        return `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ___ VARA CRIMINAL DA COMARCA DE _____________
+        
+        [NOME DO IMPETRANTE], brasileiro(a), [estado civil], [profissão], portador(a) do RG nº [número] e CPF nº [número], residente e domiciliado(a) na [endereço completo], vem, respeitosamente, à presença de Vossa Excelência, impetrar a presente
+        
+        ORDEM DE HABEAS CORPUS
+        COM PEDIDO DE LIMINAR
+        
+        em favor de [NOME DO PACIENTE], brasileiro(a), [estado civil], [profissão], portador(a) do RG nº [número] e CPF nº [número], residente e domiciliado(a) na [endereço completo], atualmente recolhido no [local de prisão], em razão de ato ilegal praticado por [NOME DA AUTORIDADE COATORA], [cargo/função], pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        [Descrição detalhada dos fatos relacionados à prisão ilegal ou ameaça de prisão]
+        
+        II - DO DIREITO
+        
+        [Fundamentação jurídica com base na Constituição Federal e legislação processual penal]
+        
+        III - DO PEDIDO LIMINAR
+        
+        [Fundamentação para concessão de liminar]
+        
+        IV - DOS PEDIDOS
+        
+        Ante o exposto, requer:
+        
+        a) A concessão de LIMINAR, determinando a imediata expedição de alvará de soltura em favor do paciente;
+        b) A notificação da autoridade coatora para prestar informações no prazo legal;
+        c) A oitiva do Ministério Público;
+        d) No mérito, a concessão definitiva da ordem de habeas corpus, confirmando a liminar, para que seja relaxada a prisão ilegal do paciente.
+        
+        Termos em que,
+        Pede deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
+
+      case "execucao":
+        return `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA ___ VARA CÍVEL DA COMARCA DE _____________
+        
+        [NOME DO EXEQUENTE], brasileiro(a), [estado civil], [profissão], portador(a) do RG nº [número] e CPF nº [número], residente e domiciliado(a) na [endereço completo], vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        
+        AÇÃO DE EXECUÇÃO DE TÍTULO EXTRAJUDICIAL
+        
+        em face de [NOME DO EXECUTADO], pessoa [física/jurídica], inscrito(a) no [CPF/CNPJ] sob o nº [número], com [residência/sede] na [endereço completo], pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        [Descrição da relação que originou o título executivo e do inadimplemento]
+        
+        II - DO TÍTULO EXECUTIVO
+        
+        [Descrição detalhada do título executivo extrajudicial]
+        
+        III - DO VALOR DA EXECUÇÃO
+        
+        [Cálculo detalhado do valor executado, incluindo principal, juros, correção monetária e eventuais multas]
+        
+        IV - DO DIREITO
+        
+        [Fundamentação jurídica com base no Código de Processo Civil]
+        
+        V - DOS PEDIDOS
+        
+        Ante o exposto, requer:
+        
+        a) A citação do executado para pagar a dívida no prazo de 3 (três) dias, sob pena de penhora de bens;
+        b) Caso não haja pagamento no prazo legal, a expedição de mandado de penhora e avaliação de bens do executado;
+        c) A intimação do executado da penhora realizada;
+        d) A condenação do executado ao pagamento das custas processuais e honorários advocatícios;
+        e) A produção de todas as provas em direito admitidas.
+        
+        Dá-se à causa o valor de R$ [valor da execução].
+        
+        Termos em que,
+        Pede deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
+
+      default:
+        return "Petição ainda não implementada para este tipo de documento.";
+    }
   };
 
   return (
@@ -252,7 +359,12 @@ const Questionnaire = () => {
                 <div className="flex justify-end">
                   <Button 
                     type="button" 
-                    onClick={handleFinalizePetition}
+                    onClick={() => {
+                      toast({
+                        title: "Petição finalizada",
+                        description: "Sua petição foi salva com sucesso.",
+                      });
+                    }}
                   >
                     Finalizar Petição
                   </Button>
@@ -266,11 +378,13 @@ const Questionnaire = () => {
               Assistente de Petições
             </h2>
             <p className="text-zinc-600">
-              Converse com nosso assistente para melhorar sua petição
+              {generatedPetition 
+                ? "Converse com nosso assistente para melhorar sua petição" 
+                : "Gere sua petição primeiro para conversar com nosso assistente"}
             </p>
             <ChatInterface
-              peticaoId="temp-id" // Será substituído pelo ID real da petição
-              contexto="Exemplo de contexto" // Será substituído pelo contexto real
+              peticaoId="temp-id" 
+              contexto={generatedPetition || "Gere sua petição primeiro"}
             />
           </div>
         </div>
@@ -286,65 +400,6 @@ const Questionnaire = () => {
               <p className="mt-4 text-center text-zinc-600">
                 Nossa IA está trabalhando na sua petição. Isso pode levar alguns instantes...
               </p>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog de seleção de templates */}
-        <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-          <DialogContent className="sm:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-center">
-                Escolha um modelo para sua petição
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
-              {templates.map((template) => (
-                <div 
-                  key={template.id}
-                  className={cn(
-                    "relative flex flex-col border rounded-lg overflow-hidden cursor-pointer transition-all duration-200",
-                    selectedTemplate === template.id 
-                      ? "ring-2 ring-primary ring-offset-2" 
-                      : "hover:shadow-md"
-                  )}
-                  onClick={() => handleSelectTemplate(template.id)}
-                >
-                  <div className={cn("p-4", template.gradient)}>
-                    <div className="flex items-center justify-between">
-                      {template.icon}
-                      {selectedTemplate === template.id && (
-                        <Check className="h-5 w-5 text-white" />
-                      )}
-                    </div>
-                    <div className="h-20" /> {/* Espaço para a pré-visualização */}
-                  </div>
-                  
-                  <div className="p-4 bg-white">
-                    <h3 className="font-medium">{template.name}</h3>
-                    <p className="text-sm text-zinc-500 mt-1">{template.description}</p>
-                  </div>
-                  
-                  <div className={cn("h-1", template.color)} />
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-between mt-4">
-              <Button variant="outline" onClick={() => setShowTemplates(false)}>
-                Cancelar
-              </Button>
-              <Button 
-                disabled={selectedTemplate === null}
-                onClick={() => {
-                  if (selectedTemplate !== null) {
-                    handleSelectTemplate(selectedTemplate);
-                  }
-                }}
-              >
-                Confirmar seleção
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
