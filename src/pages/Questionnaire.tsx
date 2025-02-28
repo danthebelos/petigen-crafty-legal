@@ -12,6 +12,9 @@ const Questionnaire = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   const [generatedPetition, setGeneratedPetition] = useState<string | null>(null);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   const templates = [
     {
@@ -86,6 +89,83 @@ const Questionnaire = () => {
     }
   ];
 
+  const handleFormSubmit = (data: Record<string, any>) => {
+    setFormData(data);
+    setReviewMode(true);
+  };
+
+  const handleEditForm = () => {
+    setReviewMode(false);
+  };
+
+  const handleGeneratePetition = () => {
+    setIsAIDialogOpen(true);
+    // Aqui seria a lógica para enviar os dados para a IA
+    // e receber a petição gerada
+    
+    // Simulando o tempo de processamento da IA
+    setTimeout(() => {
+      const petitionText = `
+        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DO TRABALHO DA ___ VARA DO TRABALHO DE _____________
+        
+        ${formData.nomeReclamante || 'NOME DO RECLAMANTE'}, brasileiro(a), ${formData.estadoCivilReclamante || 'estado civil'}, portador(a) do RG nº ${formData.rgReclamante || 'número'} e CPF nº ${formData.cpfReclamante || 'número'}, residente e domiciliado(a) na ${formData.enderecoReclamante || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
+        
+        RECLAMAÇÃO TRABALHISTA
+        COM PEDIDO DE TUTELA DE URGÊNCIA
+        
+        em face de ${formData.razaoSocialReclamada || 'NOME DA RECLAMADA'}, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ${formData.cnpjReclamada || 'número'}, com sede na ${formData.enderecoReclamada || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
+        
+        I - DOS FATOS
+        
+        O(A) Reclamante foi admitido(a) pela Reclamada em ${formData.dataAdmissao || 'data'}, para exercer a função de ${formData.funcao || 'função'}, recebendo como último salário o valor de R$ ${formData.ultimoSalario || 'valor'}.
+        
+        [Continua com descrição detalhada dos fatos, fundamentação jurídica e pedidos baseados nos dados fornecidos]
+        
+        II - DO DIREITO
+        
+        [Extensa fundamentação jurídica com base na legislação trabalhista, jurisprudência e doutrina]
+        
+        III - DOS PEDIDOS
+        
+        Ante o exposto, requer a procedência dos pedidos para condenar a Reclamada a pagar ao Reclamante:
+        
+        ${formData.verbasRescisorias ? `a) Verbas rescisórias não pagas, especificamente: ${formData.verbasRescisoriasDetalhe || ''};` : ''}
+        ${formData.horasExtras ? `b) Horas extras e reflexos, considerando: ${formData.horasExtrasDetalhe || ''};` : ''}
+        ${formData.adicionalNoturno ? `c) Adicional noturno e reflexos, referente a: ${formData.adicionalNoturnoDetalhe || ''};` : ''}
+        ${formData.adicionalInsalubridade ? 'd) Adicional de insalubridade/periculosidade e reflexos;' : ''}
+        ${formData.equiparacaoSalarial ? `e) Diferenças salariais por equiparação salarial com o paradigma ${formData.equiparacaoSalarialDetalhe || ''};` : ''}
+        ${formData.danosMorais ? `f) Indenização por danos morais no valor de R$ 20.000,00, pelos seguintes fatos: ${formData.danosMoraisDetalhe || ''};` : ''}
+        ${formData.outrosPedidos ? `g) ${formData.outrosPedidosDetalhe || ''};` : ''}
+        
+        h) Juros e correção monetária;
+        i) Honorários advocatícios de sucumbência;
+        j) Demais direitos decorrentes da relação de emprego.
+        
+        IV - DOS REQUERIMENTOS
+        
+        Requer-se:
+        
+        a) A notificação da Reclamada para, querendo, apresentar defesa, sob pena de revelia e confissão;
+        b) A produção de todas as provas em direito admitidas, especialmente depoimento pessoal do representante legal da Reclamada, sob pena de confissão, oitiva de testemunhas, juntada de documentos e perícias;
+        c) A condenação da Reclamada ao pagamento das custas processuais e demais despesas;
+        d) Os benefícios da justiça gratuita, por não possuir condições de arcar com as custas do processo sem prejuízo do sustento próprio e de sua família;
+        
+        Dá-se à causa o valor de R$ 50.000,00 para efeitos fiscais.
+        
+        Termos em que,
+        Pede deferimento.
+        
+        [Cidade], [Data].
+        
+        [Advogado]
+        OAB/XX nº XXXXX
+      `;
+      
+      setGeneratedPetition(petitionText);
+      setIsAIDialogOpen(false);
+    }, 3000);
+  };
+
   const handleFinalizePetition = () => {
     setShowTemplates(true);
   };
@@ -116,7 +196,69 @@ const Questionnaire = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <QuestionnaireForm onFinalize={handleFinalizePetition} />
+            {!reviewMode && !generatedPetition ? (
+              <QuestionnaireForm onSubmit={handleFormSubmit} />
+            ) : reviewMode && !generatedPetition ? (
+              <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-zinc-900">
+                  Revisão de Dados
+                </h2>
+                
+                <div className="space-y-4 bg-zinc-50 p-6 rounded-lg">
+                  <h3 className="font-medium text-zinc-900">
+                    Tipo de Petição: {formData.tipo === "trabalhista" ? "Trabalhista" : 
+                                    formData.tipo === "indenizatoria" ? "Cível (Indenizatória)" : 
+                                    formData.tipo === "divorcio" ? "Divórcio" : 
+                                    formData.tipo === "habeas-corpus" ? "Habeas Corpus" : 
+                                    formData.tipo === "execucao" ? "Execução de Título Extrajudicial" : ""}
+                  </h3>
+                  
+                  <div className="border-t border-zinc-200 pt-4">
+                    <p className="text-zinc-500 text-sm mb-2">
+                      Verifique se todos os dados estão corretos antes de gerar a petição.
+                    </p>
+                    
+                    <div className="prose prose-zinc prose-sm max-w-none">
+                      <p>
+                        Ao prosseguir, o sistema enviará os dados para a IA gerar uma petição baseada nas informações fornecidas.
+                        O documento poderá ser editado posteriormente, se necessário.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={handleEditForm}>
+                    Editar Dados
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={handleGeneratePetition}
+                  >
+                    Gerar petição com IA
+                  </Button>
+                </div>
+              </div>
+            ) : generatedPetition ? (
+              <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-zinc-900">
+                  Petição Gerada
+                </h2>
+                
+                <div className="bg-zinc-50 p-4 rounded-lg prose prose-zinc prose-sm max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap">{generatedPetition}</pre>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={handleFinalizePetition}
+                  >
+                    Finalizar Petição
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
           
           <div className="space-y-4">
@@ -132,6 +274,21 @@ const Questionnaire = () => {
             />
           </div>
         </div>
+
+        {/* Dialog de processamento da IA */}
+        <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center">Gerando sua petição</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+              <p className="mt-4 text-center text-zinc-600">
+                Nossa IA está trabalhando na sua petição. Isso pode levar alguns instantes...
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog de seleção de templates */}
         <Dialog open={showTemplates} onOpenChange={setShowTemplates}>

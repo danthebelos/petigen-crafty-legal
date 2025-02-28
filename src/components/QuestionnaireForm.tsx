@@ -19,16 +19,20 @@ import QuestionTooltip from "@/components/QuestionTooltip";
 import { useToast } from "@/hooks/use-toast";
 
 interface QuestionnaireFormProps {
-  onFinalize?: () => void;
+  onSubmit?: (data: Record<string, any>) => void;
 }
 
-const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => {
+const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onSubmit }) => {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [petitionType, setPetitionType] = useState<string>("");
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(false);
-  const [generatedPetition, setGeneratedPetition] = useState<string | null>(null);
+
+  const steps = [
+    { label: "Tipo de Petição", description: "Selecione o tipo" },
+    { label: "Informações", description: "Dados necessários" },
+    { label: "Pedidos", description: "Detalhes do pedido" },
+  ];
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -58,92 +62,16 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    setLoading(true);
-    
-    // Simulando a geração da petição com IA
-    setTimeout(() => {
-      setLoading(false);
-      
-      // Simulação da petição gerada pela IA
-      const petition = `
-        EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DO TRABALHO DA ___ VARA DO TRABALHO DE _____________
-        
-        ${formData.nomeReclamante || 'NOME DO RECLAMANTE'}, brasileiro(a), ${formData.estadoCivilReclamante || 'estado civil'}, portador(a) do RG nº ${formData.rgReclamante || 'número'} e CPF nº ${formData.cpfReclamante || 'número'}, residente e domiciliado(a) na ${formData.enderecoReclamante || 'endereço completo'}, vem, respeitosamente, à presença de Vossa Excelência, por seu advogado que esta subscreve, propor a presente
-        
-        RECLAMAÇÃO TRABALHISTA
-        COM PEDIDO DE TUTELA DE URGÊNCIA
-        
-        em face de ${formData.razaoSocialReclamada || 'NOME DA RECLAMADA'}, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ${formData.cnpjReclamada || 'número'}, com sede na ${formData.enderecoReclamada || 'endereço completo'}, pelos fatos e fundamentos a seguir expostos.
-        
-        I - DOS FATOS
-        
-        O(A) Reclamante foi admitido(a) pela Reclamada em ${formData.dataAdmissao || 'data'}, para exercer a função de ${formData.funcao || 'função'}, recebendo como último salário o valor de R$ ${formData.ultimoSalario || 'valor'}.
-        
-        [Continua com descrição detalhada dos fatos, fundamentação jurídica e pedidos baseados nos dados fornecidos]
-        
-        II - DO DIREITO
-        
-        [Extensa fundamentação jurídica com base na legislação trabalhista, jurisprudência e doutrina]
-        
-        III - DOS PEDIDOS
-        
-        Ante o exposto, requer a procedência dos pedidos para condenar a Reclamada a pagar ao Reclamante:
-        
-        ${formData.verbasRescisorias ? `a) Verbas rescisórias não pagas, especificamente: ${formData.verbasRescisoriasDetalhe || ''};` : ''}
-        ${formData.horasExtras ? `b) Horas extras e reflexos, considerando: ${formData.horasExtrasDetalhe || ''};` : ''}
-        ${formData.adicionalNoturno ? `c) Adicional noturno e reflexos, referente a: ${formData.adicionalNoturnoDetalhe || ''};` : ''}
-        ${formData.adicionalInsalubridade ? 'd) Adicional de insalubridade/periculosidade e reflexos;' : ''}
-        ${formData.equiparacaoSalarial ? `e) Diferenças salariais por equiparação salarial com o paradigma ${formData.equiparacaoSalarialDetalhe || ''};` : ''}
-        ${formData.danosMorais ? `f) Indenização por danos morais no valor de R$ 20.000,00, pelos seguintes fatos: ${formData.danosMoraisDetalhe || ''};` : ''}
-        ${formData.outrosPedidos ? `g) ${formData.outrosPedidosDetalhe || ''};` : ''}
-        
-        h) Juros e correção monetária;
-        i) Honorários advocatícios de sucumbência;
-        j) Demais direitos decorrentes da relação de emprego.
-        
-        IV - DOS REQUERIMENTOS
-        
-        Requer-se:
-        
-        a) A notificação da Reclamada para, querendo, apresentar defesa, sob pena de revelia e confissão;
-        b) A produção de todas as provas em direito admitidas, especialmente depoimento pessoal do representante legal da Reclamada, sob pena de confissão, oitiva de testemunhas, juntada de documentos e perícias;
-        c) A condenação da Reclamada ao pagamento das custas processuais e demais despesas;
-        d) Os benefícios da justiça gratuita, por não possuir condições de arcar com as custas do processo sem prejuízo do sustento próprio e de sua família;
-        
-        Dá-se à causa o valor de R$ 50.000,00 para efeitos fiscais.
-        
-        Termos em que,
-        Pede deferimento.
-        
-        [Cidade], [Data].
-        
-        [Advogado]
-        OAB/XX nº XXXXX
-      `;
-      
-      // Armazenar a petição gerada
-      setGeneratedPetition(petition);
-      
-      toast({
-        title: "Petição gerada com sucesso!",
-        description: "Agora você pode escolher um modelo para sua petição."
-      });
-      
-      if (onFinalize) {
-        onFinalize();
-      }
-    }, 2000);
+    if (onSubmit) {
+      onSubmit(formData);
+    }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-6">
       <StepIndicator
         currentStep={currentStep}
-        steps={[
-          { label: "Tipo de Petição", description: "Selecione o tipo" },
-          { label: "Informações", description: "Dados necessários" },
-          { label: "Revisão", description: "Confirme os dados" },
-        ]}
+        steps={steps}
       />
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -419,233 +347,6 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
                     </div>
                   </div>
                 </div>
-                
-                {/* Pedidos */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-zinc-900 flex items-center">
-                    Pedidos
-                    <QuestionTooltip content="Selecione os direitos que deseja pleitear" />
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="verbas-rescisorias"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("verbasRescisorias", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="verbas-rescisorias" className="font-medium">
-                          Verbas rescisórias não pagas
-                        </Label>
-                        <Input 
-                          placeholder="Especificar quais verbas"
-                          onChange={(e) => handleChange("verbasRescisoriasDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="horas-extras"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("horasExtras", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="horas-extras" className="font-medium">
-                          Horas extras
-                        </Label>
-                        <Input 
-                          placeholder="Período e quantidade aproximada"
-                          onChange={(e) => handleChange("horasExtrasDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="adicional-noturno"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("adicionalNoturno", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="adicional-noturno" className="font-medium">
-                          Adicional noturno
-                        </Label>
-                        <Input 
-                          placeholder="Período"
-                          onChange={(e) => handleChange("adicionalNoturnoDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="adicional-insalubridade"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("adicionalInsalubridade", checked === true)
-                        }
-                      />
-                      <Label htmlFor="adicional-insalubridade" className="font-medium">
-                        Adicional de insalubridade/periculosidade
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="equiparacao-salarial"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("equiparacaoSalarial", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="equiparacao-salarial" className="font-medium">
-                          Equiparação salarial
-                        </Label>
-                        <Input 
-                          placeholder="Informar cargo e nome do paradigma"
-                          onChange={(e) => handleChange("equiparacaoSalarialDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="danos-morais"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("danosMorais", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="danos-morais" className="font-medium">
-                          Danos morais
-                        </Label>
-                        <Textarea 
-                          placeholder="Especificar fatos"
-                          onChange={(e) => handleChange("danosMoraisDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="outros-pedidos"
-                        onCheckedChange={(checked) => 
-                          handleCheckboxChange("outrosPedidos", checked === true)
-                        }
-                      />
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="outros-pedidos" className="font-medium">
-                          Outros pedidos
-                        </Label>
-                        <Textarea 
-                          placeholder="Especificar"
-                          onChange={(e) => handleChange("outrosPedidosDetalhe", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Informações Complementares */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-zinc-900 flex items-center">
-                    Informações Complementares
-                    <QuestionTooltip content="Dados adicionais importantes para o processo" />
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Existem testemunhas?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("testemunhas", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="testemunhas-sim" />
-                          <Label htmlFor="testemunhas-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="testemunhas-nao" />
-                          <Label htmlFor="testemunhas-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Possui documentos comprobatórios?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("documentos", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="documentos-sim" />
-                          <Label htmlFor="documentos-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="documentos-nao" />
-                          <Label htmlFor="documentos-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="quais-documentos">Quais documentos possui?</Label>
-                      <Textarea
-                        id="quais-documentos"
-                        placeholder="Cartão de ponto, contracheques, etc."
-                        onChange={(e) => handleChange("quaisDocumentos", e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Houve tentativa de resolução extrajudicial?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("tentativaExtrajudicial", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="tentativa-sim" />
-                          <Label htmlFor="tentativa-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="tentativa-nao" />
-                          <Label htmlFor="tentativa-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>O cliente deseja propor acordo?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("desejaAcordo", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="acordo-sim" />
-                          <Label htmlFor="acordo-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="acordo-nao" />
-                          <Label htmlFor="acordo-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="valor-acordo">Valor sugerido para acordo</Label>
-                      <Input
-                        id="valor-acordo"
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => handleChange("valorAcordo", e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -890,36 +591,249 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
                         </RadioGroup>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="periodo-tratamento">Período de tratamento ou afastamento</Label>
-                      <Input
-                        id="periodo-tratamento"
-                        onChange={(e) => handleChange("periodoTratamento", e.target.value)}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Outros tipos de petição seriam adicionados aqui */}
+            
+            <div className="flex justify-between pt-6">
+              <Button type="button" variant="outline" onClick={handlePreviousStep}>
+                Voltar
+              </Button>
+              <Button type="button" onClick={handleNextStep}>
+                Continuar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            {/* Pedidos específicos para cada tipo de petição */}
+            {petitionType === "trabalhista" && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-zinc-900">
+                  Pedidos - Trabalhista
+                </h2>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="verbas-rescisorias"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("verbasRescisorias", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="verbas-rescisorias" className="font-medium">
+                        Verbas rescisórias não pagas
+                      </Label>
+                      <Input 
+                        placeholder="Especificar quais verbas"
+                        onChange={(e) => handleChange("verbasRescisoriasDetalhe", e.target.value)}
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Houve sequela permanente?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("houveSequela", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="sequela-sim" />
-                          <Label htmlFor="sequela-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="sequela-nao" />
-                          <Label htmlFor="sequela-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="horas-extras"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("horasExtras", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="horas-extras" className="font-medium">
+                        Horas extras
+                      </Label>
+                      <Input 
+                        placeholder="Período e quantidade aproximada"
+                        onChange={(e) => handleChange("horasExtrasDetalhe", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="adicional-noturno"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("adicionalNoturno", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="adicional-noturno" className="font-medium">
+                        Adicional noturno
+                      </Label>
+                      <Input 
+                        placeholder="Período"
+                        onChange={(e) => handleChange("adicionalNoturnoDetalhe", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="adicional-insalubridade"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("adicionalInsalubridade", checked === true)
+                      }
+                    />
+                    <Label htmlFor="adicional-insalubridade" className="font-medium">
+                      Adicional de insalubridade/periculosidade
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="equiparacao-salarial"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("equiparacaoSalarial", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="equiparacao-salarial" className="font-medium">
+                        Equiparação salarial
+                      </Label>
+                      <Input 
+                        placeholder="Informar cargo e nome do paradigma"
+                        onChange={(e) => handleChange("equiparacaoSalarialDetalhe", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="danos-morais"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("danosMorais", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="danos-morais" className="font-medium">
+                        Danos morais
+                      </Label>
+                      <Textarea 
+                        placeholder="Especificar fatos"
+                        onChange={(e) => handleChange("danosMoraisDetalhe", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="outros-pedidos"
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("outrosPedidos", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="outros-pedidos" className="font-medium">
+                        Outros pedidos
+                      </Label>
+                      <Textarea 
+                        placeholder="Especificar"
+                        onChange={(e) => handleChange("outrosPedidosDetalhe", e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
                 
-                {/* Provas */}
+                {/* Informações Complementares */}
+                <div className="space-y-4 mt-8">
+                  <h3 className="text-lg font-medium text-zinc-900 flex items-center">
+                    Informações Complementares
+                    <QuestionTooltip content="Dados adicionais importantes para o processo" />
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Existem testemunhas?</Label>
+                      <RadioGroup
+                        onValueChange={(value) => handleChange("testemunhas", value)}
+                        className="flex space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="sim" id="testemunhas-sim" />
+                          <Label htmlFor="testemunhas-sim">Sim</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="nao" id="testemunhas-nao" />
+                          <Label htmlFor="testemunhas-nao">Não</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Possui documentos comprobatórios?</Label>
+                      <RadioGroup
+                        onValueChange={(value) => handleChange("documentos", value)}
+                        className="flex space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="sim" id="documentos-sim" />
+                          <Label htmlFor="documentos-sim">Sim</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="nao" id="documentos-nao" />
+                          <Label htmlFor="documentos-nao">Não</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="quais-documentos">Quais documentos possui?</Label>
+                      <Textarea
+                        id="quais-documentos"
+                        placeholder="Cartão de ponto, contracheques, etc."
+                        onChange={(e) => handleChange("quaisDocumentos", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {petitionType === "indenizatoria" && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-zinc-900">
+                  Pedidos - Indenizatória
+                </h2>
+                
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="valor-danos-morais">Valor da indenização por danos morais pretendida</Label>
+                    <Input
+                      id="valor-danos-morais"
+                      type="number"
+                      step="0.01"
+                      onChange={(e) => handleChange("valorDanosMorais", e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="valor-danos-materiais">Valor da indenização por danos materiais pretendida</Label>
+                    <Input
+                      id="valor-danos-materiais"
+                      type="number"
+                      step="0.01"
+                      onChange={(e) => handleChange("valorDanosMateriais", e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="outros-pedidos-indenizacao">Outros pedidos</Label>
+                    <Textarea
+                      id="outros-pedidos-indenizacao"
+                      placeholder="Especificar"
+                      onChange={(e) => handleChange("outrosPedidosIndenizacao", e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                {/* Provas */}
+                <div className="space-y-4 mt-8">
                   <h3 className="text-lg font-medium text-zinc-900 flex items-center">
                     Provas
                   </h3>
@@ -967,143 +881,19 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ onFinalize }) => 
                         </div>
                       </RadioGroup>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Necessidade de perícia?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("necessidadePericia", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="pericia-sim" />
-                          <Label htmlFor="pericia-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="pericia-nao" />
-                          <Label htmlFor="pericia-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Pedidos */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-zinc-900 flex items-center">
-                    Pedidos
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="valor-danos-morais">Valor da indenização por danos morais pretendida</Label>
-                      <Input
-                        id="valor-danos-morais"
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => handleChange("valorDanosMorais", e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="valor-danos-materiais">Valor da indenização por danos materiais pretendida</Label>
-                      <Input
-                        id="valor-danos-materiais"
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => handleChange("valorDanosMateriais", e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="outros-pedidos-indenizacao">Outros pedidos</Label>
-                      <Textarea
-                        id="outros-pedidos-indenizacao"
-                        placeholder="Especificar"
-                        onChange={(e) => handleChange("outrosPedidosIndenizacao", e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Interesse em audiência de conciliação?</Label>
-                      <RadioGroup
-                        onValueChange={(value) => handleChange("interesseConciliacao", value)}
-                        className="flex space-x-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="sim" id="conciliacao-sim" />
-                          <Label htmlFor="conciliacao-sim">Sim</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="nao" id="conciliacao-nao" />
-                          <Label htmlFor="conciliacao-nao">Não</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
             
-            {/* Formulários para os outros tipos de petição iriam aqui */}
-            {/* Você pode adicionar os demais formulários seguindo o mesmo padrão */}
+            {/* Outros tipos de petição teriam seus próprios pedidos aqui */}
             
             <div className="flex justify-between pt-6">
               <Button type="button" variant="outline" onClick={handlePreviousStep}>
                 Voltar
               </Button>
-              <Button type="button" onClick={handleNextStep}>
-                Continuar
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-zinc-900">
-              Revisão de Dados
-            </h2>
-            
-            <div className="space-y-4 bg-zinc-50 p-6 rounded-lg">
-              <h3 className="font-medium text-zinc-900">
-                Tipo de Petição: {petitionType === "trabalhista" ? "Trabalhista" : 
-                                  petitionType === "indenizatoria" ? "Cível (Indenizatória)" : 
-                                  petitionType === "divorcio" ? "Divórcio" : 
-                                  petitionType === "habeas-corpus" ? "Habeas Corpus" : 
-                                  petitionType === "execucao" ? "Execução de Título Extrajudicial" : ""}
-              </h3>
-              
-              <div className="border-t border-zinc-200 pt-4">
-                <p className="text-zinc-500 text-sm mb-2">
-                  Verifique se todos os dados estão corretos antes de finalizar.
-                </p>
-                
-                <div className="prose prose-zinc prose-sm max-w-none">
-                  <p>
-                    Ao prosseguir, o sistema gerará uma petição com base nos dados fornecidos.
-                    O documento poderá ser editado posteriormente, se necessário.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={handlePreviousStep}>
-                Voltar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="relative"
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-t-transparent border-white rounded-full"></div>
-                    <span>Gerando petição...</span>
-                  </div>
-                ) : (
-                  "Gerar petição com IA"
-                )}
+              <Button type="submit">
+                Enviar Dados
               </Button>
             </div>
           </div>
