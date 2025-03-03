@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Formata o texto para exibição no chat
 export const formatarTexto = (texto: string) => {
   // Substitui **texto** por <strong>texto</strong> para negrito
