@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Loader2, FileDown } from "lucide-react";
 import { 
@@ -33,7 +33,7 @@ declare global {
   }
 }
 
-const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
+const ChatInterface = forwardRef<any, ChatInterfaceProps>(({ peticaoId, contexto }, ref) => {
   const [mensagem, setMensagem] = useState("");
   const [mensagens, setMensagens] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +41,10 @@ const ChatInterface = ({ peticaoId, contexto }: ChatInterfaceProps) => {
   const [cabeçalhoImagem, setCabeçalhoImagem] = useState<File | null>(null);
   const [rodapeImagem, setRodapeImagem] = useState<File | null>(null);
   const { toast } = useToast();
+
+  useImperativeHandle(ref, () => ({
+    enviarMensagem: () => enviarMensagem()
+  }));
 
   const formatarTexto = (texto: string) => {
     // Substitui **texto** por <strong>texto</strong> para negrito
@@ -434,6 +438,11 @@ PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUME
         enviarMensagem();
       }, 100);
     };
+    
+    return () => {
+      // Limpar a função global ao desmontar o componente
+      window.enviarMensagemParaChat = () => {};
+    };
   }, [mensagens]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'cabeçalho' | 'rodape') => {
@@ -555,6 +564,8 @@ PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUME
       </div>
     </div>
   );
-};
+});
+
+ChatInterface.displayName = "ChatInterface";
 
 export default ChatInterface;

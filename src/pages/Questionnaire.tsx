@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 import ChatInterface from "@/components/ChatInterface";
@@ -11,6 +11,7 @@ const Questionnaire = () => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [promptContext, setPromptContext] = useState<string | null>(null);
+  const chatRef = useRef<any>(null);
 
   const handleFormSubmit = (data: Record<string, any>) => {
     setFormData(data);
@@ -33,8 +34,15 @@ const Questionnaire = () => {
     
     toast({
       title: "Dados enviados para o chat",
-      description: "Converse com o assistente para gerar sua petição",
+      description: "Sua petição está sendo gerada automaticamente",
     });
+    
+    // Enviar automaticamente a mensagem para o chat para gerar a petição
+    setTimeout(() => {
+      if (window.enviarMensagemParaChat) {
+        window.enviarMensagemParaChat("Por favor, gere minha petição completa com base nas informações que enviei.");
+      }
+    }, 500);
   };
 
   const handleNewPetition = () => {
@@ -80,7 +88,7 @@ const Questionnaire = () => {
                   </h3>
                   
                   <p className="text-zinc-600 mt-2">
-                    Os dados do formulário foram enviados para o chat. Converse com o assistente para obter sua petição.
+                    Sua petição está sendo gerada automaticamente pelo assistente. Aguarde enquanto processamos os dados.
                   </p>
                 </div>
                 
@@ -102,12 +110,13 @@ const Questionnaire = () => {
             </h2>
             <p className="text-zinc-600">
               {!isFormSubmitted 
-                ? "Preencha o formulário primeiro para conversar com nosso assistente" 
-                : "Converse com nosso assistente para gerar sua petição"}
+                ? "Preencha o formulário primeiro para gerar sua petição" 
+                : "Sua petição está sendo gerada automaticamente"}
             </p>
             <ChatInterface
               peticaoId="temp-id" 
               contexto={promptContext || "Preencha o formulário primeiro"}
+              ref={chatRef}
             />
           </div>
         </div>
