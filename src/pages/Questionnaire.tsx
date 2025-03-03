@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 import ChatInterface from "@/components/ChatInterface";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,9 +25,19 @@ const Questionnaire = () => {
 
   const handleGeneratePetition = () => {
     setIsAIDialogOpen(true);
-    // Lógica para enviar os dados para a IA e receber a petição gerada
+    
+    // Construindo o prompt para enviar para a IA
+    let promptContent = `Com base nas seguintes informações, gere uma petição ${formData.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 5 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+    
+    // Adicionando os dados do formulário ao prompt
+    Object.keys(formData).forEach(key => {
+      promptContent += `${key}: ${formData[key]}\n`;
+    });
+    
+    console.log("Enviando prompt para a IA:", promptContent);
     
     // Simulando o tempo de processamento da IA
+    // Em produção, aqui seria feita a chamada real para a API DeepSeek
     setTimeout(() => {
       const petitionText = generatePetitionText(formData);
       setGeneratedPetition(petitionText);
@@ -328,7 +338,7 @@ const Questionnaire = () => {
                     <div className="prose prose-zinc prose-sm max-w-none">
                       <p>
                         Ao prosseguir, o sistema enviará os dados para a IA gerar uma petição baseada nas informações fornecidas.
-                        O documento poderá ser editado posteriormente, se necessário.
+                        O documento terá pelo menos 5 páginas e será extremamente bem fundamentado, incluindo doutrina e jurisprudência.
                       </p>
                     </div>
                   </div>
@@ -342,7 +352,7 @@ const Questionnaire = () => {
                     type="button" 
                     onClick={handleGeneratePetition}
                   >
-                    Gerar petição com IA
+                    Gerar Petição com IA
                   </Button>
                 </div>
               </div>
@@ -394,11 +404,14 @@ const Questionnaire = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-center">Gerando sua petição</DialogTitle>
+              <DialogDescription className="text-center">
+                Nossa IA está criando uma petição completa e bem fundamentada com pelo menos 5 páginas
+              </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
               <p className="mt-4 text-center text-zinc-600">
-                Nossa IA está trabalhando na sua petição. Isso pode levar alguns instantes...
+                Estamos gerando uma petição completa e bem fundamentada com base nos seus dados. Isso pode levar alguns instantes...
               </p>
             </div>
           </DialogContent>
