@@ -1,26 +1,9 @@
 
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Send, Loader2, FileDown } from "lucide-react";
-import { 
-  Document, 
-  Packer, 
-  Paragraph, 
-  TextRun, 
-  AlignmentType, 
-  Header, 
-  Footer,
-  ImageRun
-} from "docx";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { useEffect, forwardRef, useImperativeHandle } from "react";
+import { useChat, Message } from "@/hooks/useChat";
+import MessageList from "@/components/chat/MessageList";
+import MessageInput from "@/components/chat/MessageInput";
+import DocumentControls from "@/components/chat/DocumentControls";
 
 interface ChatInterfaceProps {
   peticaoId: string;
@@ -34,402 +17,23 @@ declare global {
 }
 
 const ChatInterface = forwardRef<any, ChatInterfaceProps>(({ peticaoId, contexto }, ref) => {
-  const [mensagem, setMensagem] = useState("");
-  const [mensagens, setMensagens] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [peticaoPronta, setPeticaoPronta] = useState(false);
-  const [cabeçalhoImagem, setCabeçalhoImagem] = useState<File | null>(null);
-  const [rodapeImagem, setRodapeImagem] = useState<File | null>(null);
-  const { toast } = useToast();
+  const {
+    mensagem,
+    mensagens,
+    setMensagem,
+    isLoading,
+    peticaoPronta,
+    enviarMensagem
+  } = useChat(peticaoId, contexto);
+
+  // Obtém a última mensagem do assistente (petição)
+  const peticaoFinal = mensagens
+    .filter(m => m.role === "assistant")
+    .pop()?.content || null;
 
   useImperativeHandle(ref, () => ({
     enviarMensagem: () => enviarMensagem()
   }));
-
-  const formatarTexto = (texto: string) => {
-    // Substitui **texto** por <strong>texto</strong> para negrito
-    texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Substitui *texto* por <em>texto</em> para itálico
-    texto = texto.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    return texto;
-  };
-
-  const renderizarMensagem = (content: string) => {
-    return <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatarTexto(content) }} />;
-  };
-
-  const processarTextoParaDocumentoWord = (texto: string) => {
-    // Dividir o texto em parágrafos
-    const paragrafos = texto.split('\n\n');
-    
-    return paragrafos.map(paragrafo => {
-      // Verificar se é um título (todo em maiúsculas)
-      const ehTitulo = paragrafo.trim() === paragrafo.trim().toUpperCase() && paragrafo.trim().length > 3;
-      
-      // Processar formatação de negrito e itálico
-      const segmentos = [];
-      let ultimoIndice = 0;
-      
-      // Processar negrito
-      const regexNegrito = /\*\*(.*?)\*\*/g;
-      let matchNegrito;
-      while ((matchNegrito = regexNegrito.exec(paragrafo)) !== null) {
-        // Adicionar texto antes do negrito
-        if (matchNegrito.index > ultimoIndice) {
-          segmentos.push(
-            new TextRun({
-              text: paragrafo.substring(ultimoIndice, matchNegrito.index),
-              size: ehTitulo ? 28 : 24,
-              bold: ehTitulo,
-            })
-          );
-        }
-        
-        // Adicionar texto em negrito
-        segmentos.push(
-          new TextRun({
-            text: matchNegrito[1], // O texto dentro dos asteriscos
-            size: ehTitulo ? 28 : 24,
-            bold: true,
-          })
-        );
-        
-        ultimoIndice = matchNegrito.index + matchNegrito[0].length;
-      }
-      
-      // Processar itálico no texto restante
-      const textoRestante = paragrafo.substring(ultimoIndice);
-      const regexItalico = /\*(.*?)\*/g;
-      let ultimoIndiceItalico = 0;
-      let matchItalico;
-      
-      const segmentosRestantes = [];
-      
-      while ((matchItalico = regexItalico.exec(textoRestante)) !== null) {
-        // Adicionar texto antes do itálico
-        if (matchItalico.index > ultimoIndiceItalico) {
-          segmentosRestantes.push(
-            new TextRun({
-              text: textoRestante.substring(ultimoIndiceItalico, matchItalico.index),
-              size: ehTitulo ? 28 : 24,
-              bold: ehTitulo,
-            })
-          );
-        }
-        
-        // Adicionar texto em itálico
-        segmentosRestantes.push(
-          new TextRun({
-            text: matchItalico[1], // O texto dentro dos asteriscos
-            size: ehTitulo ? 28 : 24,
-            italics: true,
-          })
-        );
-        
-        ultimoIndiceItalico = matchItalico.index + matchItalico[0].length;
-      }
-      
-      // Adicionar texto final se houver
-      if (ultimoIndiceItalico < textoRestante.length) {
-        segmentosRestantes.push(
-          new TextRun({
-            text: textoRestante.substring(ultimoIndiceItalico),
-            size: ehTitulo ? 28 : 24,
-            bold: ehTitulo,
-          })
-        );
-      }
-      
-      // Se não houver formatação, adicionar o texto completo
-      if (segmentos.length === 0 && segmentosRestantes.length === 0) {
-        segmentos.push(
-          new TextRun({
-            text: paragrafo,
-            size: ehTitulo ? 28 : 24,
-            bold: ehTitulo,
-          })
-        );
-      } else if (segmentosRestantes.length > 0) {
-        segmentos.push(...segmentosRestantes);
-      }
-      
-      return new Paragraph({
-        children: segmentos,
-        spacing: {
-          after: 400,
-          before: ehTitulo ? 400 : 200,
-        },
-        alignment: ehTitulo ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
-      });
-    });
-  };
-
-  const gerarDocumentoWord = async (texto: string) => {
-    const paragrafos = processarTextoParaDocumentoWord(texto);
-    
-    let header = undefined;
-    let footer = undefined;
-
-    // Adicionar cabeçalho se existir uma imagem
-    if (cabeçalhoImagem) {
-      try {
-        const cabeçalhoBuffer = await cabeçalhoImagem.arrayBuffer();
-        const imageExtension = getImageFileExtension(cabeçalhoImagem.name);
-        
-        header = {
-          default: new Header({
-            children: [
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: new Uint8Array(cabeçalhoBuffer),
-                    transformation: {
-                      width: 600,
-                      height: 100,
-                    },
-                    type: imageExtension, // Definir o tipo baseado na extensão
-                    altText: {
-                      title: "Cabeçalho",
-                      description: "Imagem de cabeçalho do escritório",
-                      name: "Cabeçalho"
-                    }
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              }),
-            ],
-          }),
-        };
-      } catch (error) {
-        console.error("Erro ao processar imagem de cabeçalho:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro no cabeçalho",
-          description: "Não foi possível inserir a imagem de cabeçalho.",
-        });
-      }
-    }
-
-    // Adicionar rodapé se existir uma imagem
-    if (rodapeImagem) {
-      try {
-        const rodapeBuffer = await rodapeImagem.arrayBuffer();
-        const imageExtension = getImageFileExtension(rodapeImagem.name);
-        
-        footer = {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: new Uint8Array(rodapeBuffer),
-                    transformation: {
-                      width: 600,
-                      height: 80,
-                    },
-                    type: imageExtension, // Definir o tipo baseado na extensão
-                    altText: {
-                      title: "Rodapé",
-                      description: "Imagem de rodapé do escritório",
-                      name: "Rodapé"
-                    }
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              }),
-            ],
-          }),
-        };
-      } catch (error) {
-        console.error("Erro ao processar imagem de rodapé:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro no rodapé",
-          description: "Não foi possível inserir a imagem de rodapé.",
-        });
-      }
-    }
-    
-    return new Document({
-      sections: [
-        {
-          properties: {
-            page: {
-              margin: {
-                top: 1400, // Margem superior maior para acomodar o cabeçalho
-                right: 1000,
-                bottom: 1200, // Margem inferior maior para acomodar o rodapé
-                left: 1000,
-              },
-            },
-          },
-          headers: header,
-          footers: footer,
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO",
-                  size: 28,
-                  bold: true,
-                }),
-              ],
-              spacing: { after: 400 },
-              alignment: AlignmentType.CENTER,
-            }),
-            ...paragrafos,
-          ],
-        },
-      ],
-    });
-  };
-
-  // Função para determinar o tipo de imagem com base na extensão do arquivo
-  const getImageFileExtension = (filename: string): "jpg" | "png" | "gif" | "bmp" => {
-    const extension = filename.split('.').pop()?.toLowerCase() || "";
-    
-    if (extension === "jpg" || extension === "jpeg") {
-      return "jpg";
-    } else if (extension === "gif") {
-      return "gif";
-    } else if (extension === "bmp") {
-      return "bmp";
-    } else {
-      // Para outras extensões ou desconhecidas, assumir png como padrão seguro
-      return "png";
-    }
-  };
-
-  const enviarMensagem = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    const mensagemParaEnviar = e ? mensagem : mensagem;
-    if (!mensagemParaEnviar.trim() || isLoading) return;
-
-    try {
-      setIsLoading(true);
-      setPeticaoPronta(false);
-      
-      const novaMensagemUsuario: Message = { role: "user", content: mensagemParaEnviar };
-      setMensagens([...mensagens, novaMensagemUsuario]);
-      setMensagem("");
-
-      const instrucoes = `Gere uma petição EXTREMAMENTE FUNDAMENTADA E COMPLETA com pelo menos 7 páginas. Utilize a melhor técnica jurídica possível, seguindo estas diretrizes rigorosas:
-
-1. FORMATAÇÃO E ESTRUTURA:
-   - Utilize **negrito** para pontos importantes, termos jurídicos, artigos de lei e nomes de precedentes
-   - Use *itálico* para citações diretas de doutrina, jurisprudência e trechos de legislação
-   - Organize em seções claras e bem estruturadas: FATOS, FUNDAMENTOS JURÍDICOS (subdividido por temas), PRECEDENTES JUDICIAIS, PEDIDOS
-   - Use numeração detalhada para os pedidos
-
-2. FUNDAMENTAÇÃO JURÍDICA ROBUSTA:
-   - Cite no mínimo 15 dispositivos legais específicos e atualizados, transcrevendo o texto legal
-   - Inclua pelo menos 10 citações de jurisprudência recente e relevante, transcrevendo trechos completos de acórdãos
-   - Insira no mínimo 8 citações doutrinárias de autores renomados, com referência completa à obra, edição, página
-   - Desenvolva argumentação constitucional quando aplicável (princípios constitucionais relevantes)
-   - Faça análise detalhada da jurisprudência atual dos tribunais superiores sobre a matéria
-
-3. CONTEÚDO TÉCNICO-JURÍDICO:
-   - Aborde todos os aspectos processuais e materiais relevantes para o caso
-   - Exponha os fatos de maneira clara e conexa com os fundamentos jurídicos
-   - Discuta os pressupostos processuais e condições da ação de forma técnica
-   - Desenvolva argumentação detalhada sobre cada pedido, com fundamentação específica
-   - Inclua memória de cálculo detalhada quando houver pedidos de condenação em valores
-   - Antecipe e refute possíveis argumentos contrários
-
-4. PEDIDO:
-   - Formule todos os pedidos necessários, incluindo tutelas provisórias quando cabíveis
-   - Elabore pedidos claros, específicos e juridicamente precisos
-   - Inclua pedidos relativos a custas, honorários, juros e correção monetária
-
-PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUMENTAÇÃO TÉCNICA IMPECÁVEL E FUNDAMENTAÇÃO EXAUSTIVA.`;
-
-      const { data, error } = await supabase.functions.invoke("chat-deepseek", {
-        body: { 
-          mensagem: mensagemParaEnviar, 
-          contexto,
-          instrucoes
-        },
-      });
-
-      if (error) throw error;
-
-      const novaMensagemAssistente: Message = {
-        role: "assistant",
-        content: data.resposta,
-      };
-      
-      setMensagens(mensagens => [...mensagens, novaMensagemAssistente]);
-
-      if (mensagens.filter(m => m.role === "assistant").length === 0) {
-        setPeticaoPronta(true);
-      }
-
-      await supabase
-        .from("messages")
-        .insert([
-          {
-            conversation_id: peticaoId,
-            content: mensagemParaEnviar,
-            role: 'user'
-          },
-          {
-            conversation_id: peticaoId,
-            content: data.resposta,
-            role: 'assistant'
-          }
-        ]);
-
-    } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível enviar a mensagem. Tente novamente.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFinalizarPeticao = async () => {
-    try {
-      const peticaoFinal = mensagens
-        .filter(m => m.role === "assistant")
-        .pop();
-
-      if (!peticaoFinal) {
-        throw new Error("Nenhuma petição encontrada");
-      }
-
-      const doc = await gerarDocumentoWord(peticaoFinal.content);
-      const buffer = await Packer.toBlob(doc);
-      const url = URL.createObjectURL(buffer);
-      
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "peticao.docx";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Sucesso!",
-        description: "Petição gerada com sucesso!",
-      });
-
-    } catch (error) {
-      console.error("Erro ao gerar documento:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível gerar o documento. Tente novamente.",
-      });
-    }
-  };
 
   useEffect(() => {
     window.enviarMensagemParaChat = (mensagemExterna: string) => {
@@ -443,124 +47,26 @@ PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUME
       // Limpar a função global ao desmontar o componente
       window.enviarMensagemParaChat = () => {};
     };
-  }, [mensagens]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, tipo: 'cabeçalho' | 'rodape') => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      // Verificar se é um tipo de imagem válido
-      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
-      if (!validImageTypes.includes(file.type)) {
-        toast({
-          variant: "destructive",
-          title: "Formato inválido",
-          description: "Por favor, selecione uma imagem nos formatos: JPG, PNG, GIF ou BMP.",
-        });
-        return;
-      }
-      
-      if (tipo === 'cabeçalho') {
-        setCabeçalhoImagem(file);
-        toast({
-          title: "Imagem do cabeçalho selecionada",
-          description: `Arquivo: ${file.name}`,
-        });
-      } else {
-        setRodapeImagem(file);
-        toast({
-          title: "Imagem do rodapé selecionada",
-          description: `Arquivo: ${file.name}`,
-        });
-      }
-    }
-  };
+  }, [mensagens, setMensagem, enviarMensagem]);
 
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-xl shadow-sm">
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {mensagens.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  msg.role === "user"
-                    ? "bg-zinc-900 text-white"
-                    : "bg-zinc-100 text-zinc-900"
-                }`}
-              >
-                {renderizarMensagem(msg.content)}
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+      <MessageList 
+        mensagens={mensagens} 
+        isLoading={isLoading} 
+      />
 
       <div className="p-4 border-t space-y-4">
         {peticaoPronta && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-sm mb-2 text-zinc-600">Cabeçalho (Recomendado: 2000x350px)</p>
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/bmp"
-                  onChange={(e) => handleFileChange(e, 'cabeçalho')}
-                  className="text-sm"
-                />
-                {cabeçalhoImagem && (
-                  <p className="mt-1 text-xs text-green-600">
-                    Cabeçalho: {cabeçalhoImagem.name}
-                  </p>
-                )}
-              </div>
-              <div>
-                <p className="text-sm mb-2 text-zinc-600">Rodapé (Recomendado: 2000x250px)</p>
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/bmp"
-                  onChange={(e) => handleFileChange(e, 'rodape')}
-                  className="text-sm"
-                />
-                {rodapeImagem && (
-                  <p className="mt-1 text-xs text-green-600">
-                    Rodapé: {rodapeImagem.name}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button
-              onClick={handleFinalizarPeticao}
-              className="w-full flex items-center justify-center gap-2"
-              variant="default"
-            >
-              <FileDown className="h-4 w-4" />
-              Finalizar e Gerar Petição
-            </Button>
-          </>
+          <DocumentControls peticao={peticaoFinal} />
         )}
         
-        <form onSubmit={enviarMensagem} className="flex gap-2">
-          <Input
-            value={mensagem}
-            onChange={(e) => setMensagem(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            disabled={isLoading}
-          />
-          <Button type="submit" disabled={isLoading}>
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
+        <MessageInput
+          mensagem={mensagem}
+          setMensagem={setMensagem}
+          enviarMensagem={enviarMensagem}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
