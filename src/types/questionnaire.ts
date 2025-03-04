@@ -21,6 +21,17 @@ export const formSchema = z.object({
   cidade: z.string().optional(),
   estado: z.string().optional(),
   
+  // Opções específicas para petição trabalhista
+  verbas: z.object({
+    ferias: z.boolean().default(false),
+    decimoTerceiro: z.boolean().default(false),
+    fgts: z.boolean().default(false),
+    multaRescisoria: z.boolean().default(false),
+    avisoPrevio: z.boolean().default(false),
+    horasExtras: z.boolean().default(false),
+    danoMoral: z.boolean().default(false),
+  }).optional(),
+  
   // Fatos e argumentos
   descricaoFatos: z.string().min(10, { message: "Descreva os fatos com pelo menos 10 caracteres" }),
   argumentos: z.string().optional(),

@@ -30,6 +30,15 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
       bairro: "",
       cidade: "",
       estado: "",
+      verbas: {
+        ferias: false,
+        decimoTerceiro: false,
+        fgts: false,
+        multaRescisoria: false,
+        avisoPrevio: false,
+        horasExtras: false,
+        danoMoral: false,
+      },
       descricaoFatos: "",
       argumentos: "",
       pedidos: "",
@@ -51,6 +60,10 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
 
   const handleFormSubmit = () => {
     form.handleSubmit((data) => {
+      // Se não for trabalhista, remover os dados de verbas
+      if (data.tipo !== "trabalhista") {
+        data.verbas = undefined;
+      }
       onSubmit(data);
     })();
   };

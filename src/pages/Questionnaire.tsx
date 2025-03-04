@@ -29,10 +29,21 @@ const Questionnaire = () => {
     // Construindo o prompt para enviar para o chat
     let promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
     
-    // Adicionando os dados do formulário ao prompt, omitindo campos de endereço individual
+    // Adicionando os dados do formulário ao prompt
     Object.keys(data).forEach(key => {
+      // Para verbas trabalhistas, listar apenas as selecionadas
+      if (key === 'verbas' && data[key]) {
+        promptContent += "Verbas trabalhistas solicitadas:\n";
+        if (data.verbas.ferias) promptContent += "- Férias + 1/3\n";
+        if (data.verbas.decimoTerceiro) promptContent += "- 13º Salário\n";
+        if (data.verbas.fgts) promptContent += "- FGTS\n";
+        if (data.verbas.multaRescisoria) promptContent += "- Multa Rescisória (40% FGTS)\n";
+        if (data.verbas.avisoPrevio) promptContent += "- Aviso Prévio\n";
+        if (data.verbas.horasExtras) promptContent += "- Horas Extras\n";
+        if (data.verbas.danoMoral) promptContent += "- Dano Moral\n";
+      } 
       // Pular campos individuais de endereço já que temos o endereço completo
-      if (!['enderecoReclamante', 'complemento', 'bairro', 'cidade', 'estado', 'cep'].includes(key)) {
+      else if (!['enderecoReclamante', 'complemento', 'bairro', 'cidade', 'estado', 'cep'].includes(key)) {
         promptContent += `${key}: ${data[key]}\n`;
       }
     });
@@ -65,6 +76,33 @@ const Questionnaire = () => {
     setFormData({});
     setIsFormSubmitted(false);
     setPromptContext(null);
+  };
+
+  // Função para mostrar as verbas selecionadas
+  const renderVerbasSelecionadas = () => {
+    if (!formData.verbas || formData.tipo !== "trabalhista") return null;
+    
+    const verbas = [];
+    if (formData.verbas.ferias) verbas.push("Férias + 1/3");
+    if (formData.verbas.decimoTerceiro) verbas.push("13º Salário");
+    if (formData.verbas.fgts) verbas.push("FGTS");
+    if (formData.verbas.multaRescisoria) verbas.push("Multa Rescisória (40% FGTS)");
+    if (formData.verbas.avisoPrevio) verbas.push("Aviso Prévio");
+    if (formData.verbas.horasExtras) verbas.push("Horas Extras");
+    if (formData.verbas.danoMoral) verbas.push("Dano Moral");
+    
+    if (verbas.length === 0) return null;
+    
+    return (
+      <div className="mt-3">
+        <h4 className="font-medium">Verbas solicitadas:</h4>
+        <ul className="list-disc list-inside ml-2 text-sm">
+          {verbas.map((verba, index) => (
+            <li key={index}>{verba}</li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   return (
@@ -102,6 +140,8 @@ const Questionnaire = () => {
                                     formData.tipo === "habeas-corpus" ? "Habeas Corpus" : 
                                     formData.tipo === "execucao" ? "Execução de Título Extrajudicial" : ""}
                   </h3>
+                  
+                  {renderVerbasSelecionadas()}
                   
                   <p className="text-zinc-600 mt-2">
                     Sua petição está sendo gerada automaticamente pelo assistente. Aguarde enquanto processamos os dados.
