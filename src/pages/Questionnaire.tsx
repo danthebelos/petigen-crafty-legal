@@ -16,13 +16,29 @@ const Questionnaire = () => {
   const handleFormSubmit = (data: Record<string, any>) => {
     setFormData(data);
     
-    // Construindo o prompt para enviar para o chat
-    let promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 5 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+    // Construir o endereço completo
+    const endereco = data.enderecoReclamante || '';
+    const complemento = data.complemento ? `, ${data.complemento}` : '';
+    const bairro = data.bairro ? `, ${data.bairro}` : '';
+    const cidade = data.cidade || '';
+    const estado = data.estado || '';
+    const cep = data.cep ? `, CEP: ${data.cep}` : '';
     
-    // Adicionando os dados do formulário ao prompt
+    const enderecoCompleto = `${endereco}${complemento}${bairro}, ${cidade}/${estado}${cep}`;
+    
+    // Construindo o prompt para enviar para o chat
+    let promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+    
+    // Adicionando os dados do formulário ao prompt, omitindo campos de endereço individual
     Object.keys(data).forEach(key => {
-      promptContent += `${key}: ${data[key]}\n`;
+      // Pular campos individuais de endereço já que temos o endereço completo
+      if (!['enderecoReclamante', 'complemento', 'bairro', 'cidade', 'estado', 'cep'].includes(key)) {
+        promptContent += `${key}: ${data[key]}\n`;
+      }
     });
+    
+    // Adicionar o endereço completo
+    promptContent += `enderecoCompleto: ${enderecoCompleto}\n`;
     
     console.log("Enviando dados para o chat:", promptContent);
     

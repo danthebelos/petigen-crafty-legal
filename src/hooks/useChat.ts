@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatarCPF, formatarRG } from "@/utils/textFormatUtils";
 
 export interface Message {
   role: "user" | "assistant";
@@ -59,7 +60,7 @@ export const useChat = (peticaoId: string, contexto: string) => {
    - Elabore pedidos claros, específicos e juridicamente precisos
    - Inclua pedidos relativos a custas, honorários, juros e correção monetária
 
-PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUMENTAÇÃO TÉCNICA IMPECÁVEL E FUNDAMENTAÇÃO EXAUSTIVA.`;
+NÃO CORTE OU ABREVIE A PETIÇÃO DE FORMA ALGUMA. PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUMENTAÇÃO TÉCNICA IMPECÁVEL E FUNDAMENTAÇÃO EXAUSTIVA.`;
 
       const { data, error } = await supabase.functions.invoke("chat-deepseek", {
         body: { 
@@ -107,6 +108,21 @@ PRODUZA UMA PEÇA QUE PODERIA SER APRESENTADA A UM TRIBUNAL SUPERIOR, COM ARGUME
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Função para formatar os dados do contexto
+  const formatarContexto = (ctx: string) => {
+    // Substitui formato de CPF
+    ctx = ctx.replace(/cpfReclamante: (\d{11})/g, (match, cpf) => 
+      `cpfReclamante: ${formatarCPF(cpf)}`
+    );
+    
+    // Substitui formato de RG
+    ctx = ctx.replace(/rgReclamante: ([A-Z0-9]+)/g, (match, rg) => 
+      `rgReclamante: ${formatarRG(rg)}`
+    );
+    
+    return ctx;
   };
 
   return {

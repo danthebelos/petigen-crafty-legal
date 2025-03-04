@@ -3,6 +3,7 @@ import { Message } from "@/hooks/useChat";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { renderizarMensagem } from "@/utils/textFormatUtils";
+import { useEffect, useRef } from "react";
 
 interface MessageListProps {
   mensagens: Message[];
@@ -10,6 +11,15 @@ interface MessageListProps {
 }
 
 const MessageList = ({ mensagens, isLoading }: MessageListProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when new messages come in
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [mensagens]);
+
   return (
     <ScrollArea className="flex-1 p-4">
       <div className="space-y-4">
@@ -36,6 +46,7 @@ const MessageList = ({ mensagens, isLoading }: MessageListProps) => {
             <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
           </div>
         )}
+        <div ref={scrollRef} />
       </div>
     </ScrollArea>
   );
