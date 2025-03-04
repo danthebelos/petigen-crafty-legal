@@ -1,122 +1,100 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/types/questionnaire";
-import CEPInput, { AddressData } from "@/components/CEPInput";
-import { formatarCPF, formatarRG } from "@/utils/textFormatUtils";
+import { Check } from "lucide-react";
+import CEPInput from "@/components/CEPInput";
 
 interface DadosPessoaisStepProps {
   form: UseFormReturn<FormValues>;
 }
 
 const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
-  // Formata o CPF enquanto o usuário digita
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: any) => {
-    let value = e.target.value.replace(/\D/g, '');
-    
-    if (value.length > 11) {
-      value = value.substring(0, 11);
+  const tipoSelecionado = form.watch("tipo");
+
+  // Redefinir as verbas quando o tipo de petição mudar
+  useEffect(() => {
+    if (tipoSelecionado !== "trabalhista") {
+      form.setValue("verbas", undefined);
+    } else if (!form.getValues("verbas")) {
+      // Inicializar com valores padrão se for trabalhista
+      form.setValue("verbas", {
+        ferias: false,
+        decimoTerceiro: false,
+        fgts: false,
+        multaRescisoria: false,
+        avisoPrevio: false,
+        horasExtras: false,
+        danoMoral: false,
+      });
     }
-    
-    // Formata visualmente o CPF (123.456.789-00)
-    const formattedValue = formatarCPF(value);
-    e.target.value = formattedValue;
-    
-    // Mantém apenas os números para o valor do campo
-    onChange(value);
-  };
-
-  // Formata o RG enquanto o usuário digita
-  const handleRgChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: any) => {
-    let value = e.target.value.replace(/[^\w]/g, '').toUpperCase();
-    
-    // Formata visualmente o RG
-    const formattedValue = formatarRG(value);
-    e.target.value = formattedValue;
-    
-    // Mantém o valor original para o campo
-    onChange(value);
-  };
-
-  // Processa o endereço encontrado pelo CEP
-  const handleAddressFound = (addressData: AddressData) => {
-    form.setValue("enderecoReclamante", addressData.logradouro || "");
-    form.setValue("complemento", addressData.complemento || "");
-    form.setValue("bairro", addressData.bairro || "");
-    form.setValue("cidade", addressData.localidade || "");
-    form.setValue("estado", addressData.uf || "");
-    form.setValue("cep", addressData.cep || "");
-  };
+  }, [tipoSelecionado, form]);
 
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="nomeReclamante"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome Completo</FormLabel>
-            <FormControl>
-              <Input placeholder="Nome completo" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="cpfReclamante"
-        render={({ field: { onChange, ...rest } }) => (
-          <FormItem>
-            <FormLabel>CPF</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="123.456.789-00" 
-                onChange={(e) => handleCpfChange(e, onChange)}
-                {...rest} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="rgReclamante"
-        render={({ field: { onChange, ...rest } }) => (
-          <FormItem>
-            <FormLabel>RG</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="MG-12.345.678" 
-                onChange={(e) => handleRgChange(e, onChange)}
-                {...rest} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <div className="space-y-2">
-        <FormLabel>CEP</FormLabel>
-        <CEPInput onAddressFound={handleAddressFound} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="nomeReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome Completo</FormLabel>
+              <FormControl>
+                <Input placeholder="Digite o nome completo" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="cpfReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CPF</FormLabel>
+              <FormControl>
+                <Input placeholder="000.000.000-00" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
-      <FormField
-        control={form.control}
-        name="enderecoReclamante"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Rua/Avenida</FormLabel>
-            <FormControl>
-              <Input placeholder="Rua/Avenida" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <div className="grid grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="rgReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>RG</FormLabel>
+              <FormControl>
+                <Input placeholder="Digite o RG" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="enderecoReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input placeholder="Rua, número" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="complemento"
@@ -124,12 +102,13 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>Complemento</FormLabel>
               <FormControl>
-                <Input placeholder="Apto, Bloco, etc" {...field} />
+                <Input placeholder="Apto, Bloco, etc." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="bairro"
@@ -137,14 +116,40 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>Bairro</FormLabel>
               <FormControl>
-                <Input placeholder="Bairro" {...field} />
+                <Input placeholder="Digite o bairro" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FormField
+          control={form.control}
+          name="cep"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CEP</FormLabel>
+              <FormControl>
+                <CEPInput
+                  value={field.value || ""}
+                  onChange={(value) => {
+                    field.onChange(value);
+                  }}
+                  onAddressData={(data) => {
+                    if (data.logradouro) form.setValue("enderecoReclamante", data.logradouro);
+                    if (data.bairro) form.setValue("bairro", data.bairro);
+                    if (data.localidade) form.setValue("cidade", data.localidade);
+                    if (data.uf) form.setValue("estado", data.uf);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="cidade"
@@ -152,12 +157,13 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>Cidade</FormLabel>
               <FormControl>
-                <Input placeholder="Cidade" {...field} />
+                <Input placeholder="Digite a cidade" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="estado"
@@ -165,13 +171,167 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>Estado</FormLabel>
               <FormControl>
-                <Input placeholder="Estado" {...field} />
+                <Input placeholder="UF" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
+
+      {tipoSelecionado === "trabalhista" && (
+        <div className="mt-6 space-y-4">
+          <FormLabel>Verbas Trabalhistas Solicitadas</FormLabel>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="verbas.ferias"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`} 
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label 
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    Férias + 1/3
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.decimoTerceiro"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    13º Salário
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.fgts"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    FGTS
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.multaRescisoria"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    Multa Rescisória (40% FGTS)
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.avisoPrevio"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    Aviso Prévio
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.horasExtras"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    Horas Extras
+                  </label>
+                </div>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="verbas.danoMoral"
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
+                  </div>
+                  <label
+                    className="text-sm font-medium leading-none cursor-pointer"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    Dano Moral
+                  </label>
+                </div>
+              )}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
