@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface CEPInputProps {
-  onAddressFound: (address: AddressData) => void;
-}
-
-export interface AddressData {
+interface AddressData {
   cep: string;
   logradouro: string;
   complemento: string;
@@ -18,8 +14,13 @@ export interface AddressData {
   uf: string;
 }
 
-const CEPInput: React.FC<CEPInputProps> = ({ onAddressFound }) => {
-  const [cep, setCep] = useState('');
+interface CEPInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onAddressData: (data: AddressData) => void;
+}
+
+const CEPInput: React.FC<CEPInputProps> = ({ value, onChange, onAddressData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -35,12 +36,12 @@ const CEPInput: React.FC<CEPInputProps> = ({ onAddressFound }) => {
       value = value.replace(/(\d{5})(\d{1,3})/, "$1-$2");
     }
     
-    setCep(value);
+    onChange(value);
   };
 
   const buscarCEP = async () => {
     // Remove caracteres não numéricos
-    const cepNumerico = cep.replace(/\D/g, '');
+    const cepNumerico = value.replace(/\D/g, '');
     
     if (cepNumerico.length !== 8) {
       toast({
@@ -61,7 +62,7 @@ const CEPInput: React.FC<CEPInputProps> = ({ onAddressFound }) => {
         throw new Error('CEP não encontrado');
       }
       
-      onAddressFound(data);
+      onAddressData(data);
       
       toast({
         title: "Endereço encontrado",
@@ -84,7 +85,7 @@ const CEPInput: React.FC<CEPInputProps> = ({ onAddressFound }) => {
     <div className="flex gap-2">
       <Input
         placeholder="Digite o CEP"
-        value={cep}
+        value={value}
         onChange={handleCepChange}
         maxLength={9}
         className="w-36"
