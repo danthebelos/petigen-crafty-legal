@@ -8,13 +8,14 @@ export interface Step {
 }
 
 export const formSchema = z.object({
+  inputMethod: z.enum(["questionario", "documento"]),
   tipo: z.string().min(1, { message: "Selecione um tipo de petição" }),
   
   // Dados do reclamante
-  nomeReclamante: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
-  cpfReclamante: z.string().min(11, { message: "CPF inválido" }),
-  rgReclamante: z.string().min(5, { message: "RG inválido" }),
-  enderecoReclamante: z.string().min(3, { message: "Endereço inválido" }),
+  nomeReclamante: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }).optional(),
+  cpfReclamante: z.string().min(11, { message: "CPF inválido" }).optional(),
+  rgReclamante: z.string().min(5, { message: "RG inválido" }).optional(),
+  enderecoReclamante: z.string().optional(),
   cep: z.string().optional(),
   complemento: z.string().optional(),
   bairro: z.string().optional(),
@@ -33,17 +34,20 @@ export const formSchema = z.object({
   }).optional(),
   
   // Fatos e argumentos
-  descricaoFatos: z.string().min(10, { message: "Descreva os fatos com pelo menos 10 caracteres" }),
+  descricaoFatos: z.string().min(10, { message: "Descreva os fatos com pelo menos 10 caracteres" }).optional(),
   argumentos: z.string().optional(),
   pedidos: z.string().optional(),
+  
+  // Para método de documento
+  descricaoBreve: z.string().optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
 
 export const steps: Step[] = [
+  { id: "metodo", label: "Método de Entrada" },
   { id: "tipo", label: "Tipo de Petição" },
   { id: "parte", label: "Dados da Parte" },
   { id: "fatos", label: "Fatos e Argumentos" },
   { id: "documento", label: "Anexar Documento" },
 ];
-

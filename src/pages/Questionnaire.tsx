@@ -18,45 +18,69 @@ const Questionnaire = () => {
     setFormData(data);
     setUploadedDocument(document);
     
-    // Construir o endereço completo
-    const endereco = data.enderecoReclamante || '';
-    const complemento = data.complemento ? `, ${data.complemento}` : '';
-    const bairro = data.bairro ? `, ${data.bairro}` : '';
-    const cidade = data.cidade || '';
-    const estado = data.estado || '';
-    const cep = data.cep ? `, CEP: ${data.cep}` : '';
+    // Verificar o método de entrada escolhido
+    const isDocumentMethod = data.inputMethod === "documento";
     
-    const enderecoCompleto = `${endereco}${complemento}${bairro}, ${cidade}/${estado}${cep}`;
+    let promptContent = "";
     
-    // Construindo o prompt para enviar para o chat
-    let promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+    if (isDocumentMethod) {
+      // Para método de documento direto
+      promptContent = `Com base no documento anexado e na seguinte descrição breve, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+      
+      promptContent += `Tipo de petição: ${data.tipo === "trabalhista" ? "Trabalhista" : 
+                      data.tipo === "indenizatoria" ? "Cível (Indenizatória)" : 
+                      data.tipo === "divorcio" ? "Divórcio" : 
+                      data.tipo === "habeas-corpus" ? "Habeas Corpus" : 
+                      data.tipo === "execucao" ? "Execução de Título Extrajudicial" : ""}\n`;
+      
+      promptContent += `Descrição breve: ${data.descricaoBreve}\n\n`;
+      
+      promptContent += `IMPORTANTE: Analise cuidadosamente o documento anexado que contém todas as informações detalhadas do caso. O documento é a principal fonte de informações para esta petição.\n`;
+    } else {
+      // Para método de questionário (fluxo original)
+      // Construir o endereço completo
+      const endereco = data.enderecoReclamante || '';
+      const complemento = data.complemento ? `, ${data.complemento}` : '';
+      const bairro = data.bairro ? `, ${data.bairro}` : '';
+      const cidade = data.cidade || '';
+      const estado = data.estado || '';
+      const cep = data.cep ? `, CEP: ${data.cep}` : '';
+      
+      const enderecoCompleto = `${endereco}${complemento}${bairro}, ${cidade}/${estado}${cep}`;
+      
+      // Construindo o prompt para enviar para o chat
+      promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+      
+      // Adicionando os dados do formulário ao prompt
+      Object.keys(data).forEach(key => {
+        // Pular o campo de método de entrada
+        if (key === 'inputMethod') return;
+        
+        // Para verbas trabalhistas, listar apenas as selecionadas
+        if (key === 'verbas' && data[key]) {
+          promptContent += "Verbas trabalhistas solicitadas:\n";
+          if (data.verbas.ferias) promptContent += "- Férias + 1/3\n";
+          if (data.verbas.decimoTerceiro) promptContent += "- 13º Salário\n";
+          if (data.verbas.fgts) promptContent += "- FGTS\n";
+          if (data.verbas.multaRescisoria) promptContent += "- Multa Rescisória (40% FGTS)\n";
+          if (data.verbas.avisoPrevio) promptContent += "- Aviso Prévio\n";
+          if (data.verbas.horasExtras) promptContent += "- Horas Extras\n";
+          if (data.verbas.danoMoral) promptContent += "- Dano Moral\n";
+        } 
+        // Pular campos individuais de endereço já que temos o endereço completo
+        else if (!['enderecoReclamante', 'complemento', 'bairro', 'cidade', 'estado', 'cep', 'descricaoBreve'].includes(key)) {
+          promptContent += `${key}: ${data[key]}\n`;
+        }
+      });
+      
+      // Adicionar o endereço completo
+      promptContent += `enderecoCompleto: ${enderecoCompleto}\n`;
+    }
     
-    // Adicionando os dados do formulário ao prompt
-    Object.keys(data).forEach(key => {
-      // Para verbas trabalhistas, listar apenas as selecionadas
-      if (key === 'verbas' && data[key]) {
-        promptContent += "Verbas trabalhistas solicitadas:\n";
-        if (data.verbas.ferias) promptContent += "- Férias + 1/3\n";
-        if (data.verbas.decimoTerceiro) promptContent += "- 13º Salário\n";
-        if (data.verbas.fgts) promptContent += "- FGTS\n";
-        if (data.verbas.multaRescisoria) promptContent += "- Multa Rescisória (40% FGTS)\n";
-        if (data.verbas.avisoPrevio) promptContent += "- Aviso Prévio\n";
-        if (data.verbas.horasExtras) promptContent += "- Horas Extras\n";
-        if (data.verbas.danoMoral) promptContent += "- Dano Moral\n";
-      } 
-      // Pular campos individuais de endereço já que temos o endereço completo
-      else if (!['enderecoReclamante', 'complemento', 'bairro', 'cidade', 'estado', 'cep'].includes(key)) {
-        promptContent += `${key}: ${data[key]}\n`;
-      }
-    });
-    
-    // Adicionar o endereço completo
-    promptContent += `enderecoCompleto: ${enderecoCompleto}\n`;
-
     // Adicionar informação sobre o documento anexado
     if (document) {
       promptContent += `\nDocumento anexado: ${document.name}\n`;
-      promptContent += `IMPORTANTE: O usuário anexou um documento com informações adicionais. Por favor, considere todas as informações do documento para complementar os fatos e argumentos na petição.\n`;
+      promptContent += `IMPORTANTE: O usuário ${isDocumentMethod ? "enviou um documento principal" : "anexou um documento com informações adicionais"}. Por favor, considere ${isDocumentMethod ? "principalmente" : "também"} todas as informações do documento para ${isDocumentMethod ? "criar" : "complementar"} os fatos e argumentos na petição.\n`;
     }
     
     console.log("Enviando dados para o chat:", promptContent);
@@ -89,7 +113,7 @@ const Questionnaire = () => {
 
   // Função para mostrar as verbas selecionadas
   const renderVerbasSelecionadas = () => {
-    if (!formData.verbas || formData.tipo !== "trabalhista") return null;
+    if (!formData.verbas || formData.tipo !== "trabalhista" || formData.inputMethod === "documento") return null;
     
     const verbas = [];
     if (formData.verbas.ferias) verbas.push("Férias + 1/3");
@@ -125,7 +149,7 @@ const Questionnaire = () => {
         >
           <h1 className="text-3xl font-bold text-zinc-900">Criar Nova Petição</h1>
           <p className="text-zinc-600 mt-2">
-            Preencha o formulário abaixo para gerar sua petição personalizada
+            Preencha o formulário ou envie um documento para gerar sua petição personalizada
           </p>
         </motion.div>
 
@@ -143,6 +167,10 @@ const Questionnaire = () => {
                 
                 <div className="bg-zinc-50 p-4 rounded-lg">
                   <h3 className="font-medium text-zinc-900">
+                    Método: {formData.inputMethod === "documento" ? "Envio de Documento" : "Questionário"}
+                  </h3>
+                  
+                  <h3 className="font-medium text-zinc-900 mt-2">
                     Tipo de Petição: {formData.tipo === "trabalhista" ? "Trabalhista" : 
                                     formData.tipo === "indenizatoria" ? "Cível (Indenizatória)" : 
                                     formData.tipo === "divorcio" ? "Divórcio" : 
@@ -150,11 +178,18 @@ const Questionnaire = () => {
                                     formData.tipo === "execucao" ? "Execução de Título Extrajudicial" : ""}
                   </h3>
                   
+                  {formData.inputMethod === "documento" && formData.descricaoBreve && (
+                    <div className="mt-3">
+                      <h4 className="font-medium">Descrição breve:</h4>
+                      <p className="text-sm text-zinc-700">{formData.descricaoBreve}</p>
+                    </div>
+                  )}
+                  
                   {renderVerbasSelecionadas()}
                   
                   {uploadedDocument && (
                     <div className="mt-3">
-                      <h4 className="font-medium">Documento anexado:</h4>
+                      <h4 className="font-medium">Documento {formData.inputMethod === "documento" ? "principal" : "anexado"}:</h4>
                       <p className="text-sm text-green-600">{uploadedDocument.name}</p>
                     </div>
                   )}
