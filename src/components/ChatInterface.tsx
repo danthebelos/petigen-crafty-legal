@@ -34,19 +34,24 @@ const ChatInterface = forwardRef<any, ChatInterfaceProps>(({ peticaoId, contexto
   // Expose the enviarMensagem method through ref
   useImperativeHandle(ref, () => ({
     enviarMensagem: (mensagemExterna: string) => {
+      console.log("Recebendo mensagem via ref:", mensagemExterna);
       setMensagem(mensagemExterna);
       setTimeout(() => {
+        console.log("Enviando mensagem via ref...");
         enviarMensagem();
-      }, 100);
+      }, 200);
     }
   }));
 
   useEffect(() => {
+    // Exposição da função para chamada externa
     window.enviarMensagemParaChat = (mensagemExterna: string) => {
+      console.log("Recebendo mensagem via window:", mensagemExterna);
       setMensagem(mensagemExterna);
       setTimeout(() => {
+        console.log("Enviando mensagem via window...");
         enviarMensagem();
-      }, 100);
+      }, 200);
     };
     
     return () => {

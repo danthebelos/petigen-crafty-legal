@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
 import ChatInterface from "@/components/ChatInterface";
@@ -95,16 +95,28 @@ const Questionnaire = () => {
       title: "Dados enviados para o chat",
       description: "Sua petição está sendo gerada automaticamente",
     });
-    
-    // Enviar automaticamente a mensagem para o chat para gerar a petição
-    setTimeout(() => {
-      if (chatRef.current && chatRef.current.enviarMensagem) {
-        chatRef.current.enviarMensagem("Por favor, gere minha petição completa com base nas informações que enviei.");
-      } else if (window.enviarMensagemParaChat) {
-        window.enviarMensagemParaChat("Por favor, gere minha petição completa com base nas informações que enviei.");
-      }
-    }, 500);
   };
+
+  // Efeito para enviar a mensagem após o estado ser atualizado
+  useEffect(() => {
+    if (isFormSubmitted && promptContext) {
+      // Pequeno delay para garantir que o componente chat esteja pronto
+      const timer = setTimeout(() => {
+        console.log("Tentando enviar mensagem para o chat...");
+        if (chatRef.current) {
+          console.log("Enviando mensagem via chatRef");
+          chatRef.current.enviarMensagem("Por favor, gere minha petição completa com base nas informações que enviei.");
+        } else if (window.enviarMensagemParaChat) {
+          console.log("Enviando mensagem via window.enviarMensagemParaChat");
+          window.enviarMensagemParaChat("Por favor, gere minha petição completa com base nas informações que enviei.");
+        } else {
+          console.log("Nenhum método disponível para enviar mensagem!");
+        }
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isFormSubmitted, promptContext]);
 
   const handleNewPetition = () => {
     setFormData({});
