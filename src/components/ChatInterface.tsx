@@ -31,8 +31,14 @@ const ChatInterface = forwardRef<any, ChatInterfaceProps>(({ peticaoId, contexto
     .filter(m => m.role === "assistant")
     .pop()?.content || null;
 
+  // Expose the enviarMensagem method through ref
   useImperativeHandle(ref, () => ({
-    enviarMensagem: () => enviarMensagem()
+    enviarMensagem: (mensagemExterna: string) => {
+      setMensagem(mensagemExterna);
+      setTimeout(() => {
+        enviarMensagem();
+      }, 100);
+    }
   }));
 
   useEffect(() => {
@@ -47,7 +53,7 @@ const ChatInterface = forwardRef<any, ChatInterfaceProps>(({ peticaoId, contexto
       // Limpar a função global ao desmontar o componente
       window.enviarMensagemParaChat = () => {};
     };
-  }, [mensagens, setMensagem, enviarMensagem]);
+  }, [setMensagem, enviarMensagem]);
 
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-xl shadow-sm">

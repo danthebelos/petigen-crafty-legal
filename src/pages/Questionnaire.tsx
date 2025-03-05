@@ -98,7 +98,9 @@ const Questionnaire = () => {
     
     // Enviar automaticamente a mensagem para o chat para gerar a petição
     setTimeout(() => {
-      if (window.enviarMensagemParaChat) {
+      if (chatRef.current && chatRef.current.enviarMensagem) {
+        chatRef.current.enviarMensagem("Por favor, gere minha petição completa com base nas informações que enviei.");
+      } else if (window.enviarMensagemParaChat) {
         window.enviarMensagemParaChat("Por favor, gere minha petição completa com base nas informações que enviei.");
       }
     }, 500);
