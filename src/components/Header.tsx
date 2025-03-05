@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, FileContract, BarChart } from "lucide-react";
+import { FileText, FileCheck, BarChart } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -36,7 +36,7 @@ const Header = () => {
               size="sm"
             >
               <Link to="/contracts" className="flex items-center gap-1">
-                <FileContract size={16} />
+                <FileCheck size={16} />
                 <span className="hidden sm:inline">Gerar Contratos</span>
               </Link>
             </Button>

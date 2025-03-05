@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, FileContract, BarChart, Scale } from "lucide-react";
+import { FileText, FileCheck, BarChart, Scale } from "lucide-react";
 
 const Index = () => {
   return (
@@ -31,7 +31,7 @@ const Index = () => {
             
             <div className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200 text-center">
               <div className="mx-auto bg-green-100 rounded-full w-14 h-14 flex items-center justify-center mb-4">
-                <FileContract className="h-6 w-6 text-green-700" />
+                <FileCheck className="h-6 w-6 text-green-700" />
               </div>
               <h2 className="text-xl font-semibold mb-2">Gerador de Contratos</h2>
               <p className="text-zinc-600 mb-4">

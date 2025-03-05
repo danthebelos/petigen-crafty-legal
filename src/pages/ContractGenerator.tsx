@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import ChatInterface from "@/components/ChatInterface";
 import ContractForm from "@/components/ContractForm";
 
