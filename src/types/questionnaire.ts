@@ -44,4 +44,6 @@ export const steps: Step[] = [
   { id: "tipo", label: "Tipo de Petição" },
   { id: "parte", label: "Dados da Parte" },
   { id: "fatos", label: "Fatos e Argumentos" },
+  { id: "documento", label: "Anexar Documento" },
 ];
+

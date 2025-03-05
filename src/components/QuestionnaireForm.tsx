@@ -7,15 +7,17 @@ import StepIndicator from "@/components/StepIndicator";
 import TipoPeticaoStep from "@/components/questionnaire/TipoPeticaoStep";
 import DadosPessoaisStep from "@/components/questionnaire/DadosPessoaisStep";
 import FatosArgumentosStep from "@/components/questionnaire/FatosArgumentosStep";
+import DocumentUploadStep from "@/components/questionnaire/DocumentUploadStep";
 import FormNavigation from "@/components/questionnaire/FormNavigation";
 import { FormValues, formSchema, steps } from "@/types/questionnaire";
 
 interface QuestionnaireFormProps {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: FormValues, document: File | null) => void;
 }
 
 const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,12 +52,16 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
     const isValid = await form.trigger(fieldsToValidate as any);
     
     if (isValid) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+      setCurrentStep(prev => Math.min(prev + 1, steps.length));
     }
   };
 
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleDocumentChange = (file: File | null) => {
+    setUploadedDocument(file);
   };
 
   const handleFormSubmit = () => {
@@ -64,7 +70,7 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
       if (data.tipo !== "trabalhista") {
         data.verbas = undefined;
       }
-      onSubmit(data);
+      onSubmit(data, uploadedDocument);
     })();
   };
 
@@ -77,6 +83,8 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
         return ["nomeReclamante", "cpfReclamante", "rgReclamante", "enderecoReclamante"];
       case 2:
         return ["descricaoFatos"];
+      case 3:
+        return []; // Documento é opcional, não precisa de validação
       default:
         return [];
     }
@@ -91,6 +99,8 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
         return <DadosPessoaisStep form={form} />;
       case 2:
         return <FatosArgumentosStep form={form} />;
+      case 3:
+        return <DocumentUploadStep form={form} onDocumentChange={handleDocumentChange} />;
       default:
         return null;
     }

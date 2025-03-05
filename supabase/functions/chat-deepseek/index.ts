@@ -18,15 +18,22 @@ serve(async (req) => {
       throw new Error('DEEPSEEK_API_KEY não configurada')
     }
 
-    const { mensagem, contexto } = await req.json()
+    const { mensagem, contexto, instrucoes } = await req.json()
     console.log("Recebido:", { mensagem, contexto })
+
+    // Adicionar instrução específica para considerar o documento anexado na geração da petição
+    let systemPrompt = "Você é um assistente jurídico especializado em melhorar petições. Você deve fornecer sugestões construtivas e específicas para melhorar o documento, mantendo a linguagem formal e técnica apropriada."
+    
+    if (contexto && contexto.includes("Documento anexado:")) {
+      systemPrompt += " Você deve priorizar e considerar as informações fornecidas no documento anexado mencionado no contexto, integrando-as na petição de forma coerente e fundamentada."
+    }
 
     const payload = {
       model: "deepseek-chat",
       messages: [
         {
           role: "system",
-          content: "Você é um assistente jurídico especializado em melhorar petições. Você deve fornecer sugestões construtivas e específicas para melhorar o documento, mantendo a linguagem formal e técnica apropriada."
+          content: systemPrompt
         },
         {
           role: "user",

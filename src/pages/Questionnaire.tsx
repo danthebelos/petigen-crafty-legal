@@ -11,10 +11,12 @@ const Questionnaire = () => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [promptContext, setPromptContext] = useState<string | null>(null);
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   const chatRef = useRef<any>(null);
 
-  const handleFormSubmit = (data: Record<string, any>) => {
+  const handleFormSubmit = (data: Record<string, any>, document: File | null) => {
     setFormData(data);
+    setUploadedDocument(document);
     
     // Construir o endereço completo
     const endereco = data.enderecoReclamante || '';
@@ -50,6 +52,12 @@ const Questionnaire = () => {
     
     // Adicionar o endereço completo
     promptContent += `enderecoCompleto: ${enderecoCompleto}\n`;
+
+    // Adicionar informação sobre o documento anexado
+    if (document) {
+      promptContent += `\nDocumento anexado: ${document.name}\n`;
+      promptContent += `IMPORTANTE: O usuário anexou um documento com informações adicionais. Por favor, considere todas as informações do documento para complementar os fatos e argumentos na petição.\n`;
+    }
     
     console.log("Enviando dados para o chat:", promptContent);
     
@@ -76,6 +84,7 @@ const Questionnaire = () => {
     setFormData({});
     setIsFormSubmitted(false);
     setPromptContext(null);
+    setUploadedDocument(null);
   };
 
   // Função para mostrar as verbas selecionadas
@@ -142,6 +151,13 @@ const Questionnaire = () => {
                   </h3>
                   
                   {renderVerbasSelecionadas()}
+                  
+                  {uploadedDocument && (
+                    <div className="mt-3">
+                      <h4 className="font-medium">Documento anexado:</h4>
+                      <p className="text-sm text-green-600">{uploadedDocument.name}</p>
+                    </div>
+                  )}
                   
                   <p className="text-zinc-600 mt-2">
                     Sua petição está sendo gerada automaticamente pelo assistente. Aguarde enquanto processamos os dados.
