@@ -10,6 +10,8 @@ import DadosPessoaisStep from "@/components/questionnaire/DadosPessoaisStep";
 import FatosArgumentosStep from "@/components/questionnaire/FatosArgumentosStep";
 import DocumentUploadStep from "@/components/questionnaire/DocumentUploadStep";
 import FormNavigation from "@/components/questionnaire/FormNavigation";
+import VerbasTrabalhistas from "@/components/questionnaire/VerbasTrabalhistas";
+import QuestoesPreviewsStep from "@/components/questionnaire/QuestoesPreviewsStep";
 import { FormValues, formSchema, steps } from "@/types/questionnaire";
 
 interface QuestionnaireFormProps {
@@ -35,15 +37,59 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
       bairro: "",
       cidade: "",
       estado: "",
+      emailReclamante: "",
+      telefoneReclamante: "",
+      emailReclamado: "",
+      telefoneReclamado: "",
       verbas: {
-        ferias: false,
+        // Inicializados com valores padrão false
+        avisoPrevioTrabalhado: false,
+        avisoPrevioIndenizado: false,
+        saldoSalario: false,
+        feriasVencidas: false,
+        feriasProporcionais: false,
         decimoTerceiro: false,
-        fgts: false,
-        multaRescisoria: false,
-        avisoPrevio: false,
+        multaFgts: false,
+        seguroDesemprego: false,
+        fgtsNaoDepositado: false,
+        
+        adicionalNoturno: false,
+        adicionalInsalubridade: false,
+        adicionalPericulosidade: false,
+        
+        horaExtra: false,
+        intervaloInterjornada: false,
+        intervaloIntrajornada: false,
+        
+        acumuloFuncao: false,
+        desvioFuncao: false,
+        
+        salarioAtrasado: false,
+        salarioPorFora: false,
+        inssNaoRecolhido: false,
+        
+        reconhecimentoVinculo: false,
+        registroCarteiraInexistente: false,
+        rescisaoIndireta: false,
+        reversaoPedidoDemissao: false,
+        
+        danosMorais: false,
+        indenizacaoEstabilidade: false,
+        indenizacaoDispensaDiscriminatoria: false,
+        
+        multaArt477: false,
+        multaArt467: false,
+        
+        // Valores para compatibilidade com o código existente
+        ferias: false,
         horasExtras: false,
         danoMoral: false,
+        avisoPrevio: false,
+        multaRescisoria: false,
+        fgts: false,
       },
+      juizoDigital: true,
+      solicitaJusticaGratuita: true,
       descricaoFatos: "",
       argumentos: "",
       pedidos: "",
@@ -54,14 +100,21 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
   // Atualiza os passos ativos com base no método de entrada selecionado
   useEffect(() => {
     const inputMethod = form.watch("inputMethod");
+    const tipoSelecionado = form.watch("tipo");
     
     if (inputMethod === "questionario") {
-      setActiveSteps(steps.map(step => step.id));
+      if (tipoSelecionado === "trabalhista") {
+        // Para petições trabalhistas, incluímos todos os passos
+        setActiveSteps(steps.map(step => step.id));
+      } else {
+        // Para outros tipos de petição, removemos o passo de verbas
+        setActiveSteps(steps.filter(step => step.id !== "verbas").map(step => step.id));
+      }
     } else if (inputMethod === "documento") {
       // No método de documento, pulamos alguns passos
       setActiveSteps(["metodo", "tipo", "documento"]);
     }
-  }, [form.watch("inputMethod")]);
+  }, [form.watch("inputMethod"), form.watch("tipo")]);
 
   // Obtém o índice do passo atual no array de passos ativos
   const getActiveStepIndex = (stepId: string) => {
@@ -130,8 +183,12 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
         return ["tipo"];
       case "parte":
         return ["nomeReclamante", "cpfReclamante", "rgReclamante", "enderecoReclamante"];
+      case "verbas":
+        return []; // Validação não necessária para verbas, todas são opcionais
       case "fatos":
         return ["descricaoFatos"];
+      case "questoes":
+        return []; // Validação não necessária para questões prévias
       case "documento":
         // Se for método de documento direto, exigir descrição breve
         return form.getValues("inputMethod") === "documento" ? ["descricaoBreve"] : [];
@@ -152,8 +209,12 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
         return <TipoPeticaoStep form={form} />;
       case "parte":
         return <DadosPessoaisStep form={form} />;
+      case "verbas":
+        return <VerbasTrabalhistas form={form} />;
       case "fatos":
         return <FatosArgumentosStep form={form} />;
+      case "questoes":
+        return <QuestoesPreviewsStep form={form} />;
       case "documento":
         return <DocumentUploadStep 
           form={form} 

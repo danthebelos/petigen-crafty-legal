@@ -21,6 +21,45 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
     } else if (!form.getValues("verbas")) {
       // Inicializar com valores padrão se for trabalhista
       form.setValue("verbas", {
+        // Valores padrão inicializados como false
+        avisoPrevioTrabalhado: false,
+        avisoPrevioIndenizado: false,
+        saldoSalario: false,
+        feriasVencidas: false,
+        feriasProporcionais: false,
+        decimoTerceiro: false,
+        multaFgts: false,
+        seguroDesemprego: false,
+        fgtsNaoDepositado: false,
+        
+        adicionalNoturno: false,
+        adicionalInsalubridade: false,
+        adicionalPericulosidade: false,
+        
+        horaExtra: false,
+        intervaloInterjornada: false,
+        intervaloIntrajornada: false,
+        
+        acumuloFuncao: false,
+        desvioFuncao: false,
+        
+        salarioAtrasado: false,
+        salarioPorFora: false,
+        inssNaoRecolhido: false,
+        
+        reconhecimentoVinculo: false,
+        registroCarteiraInexistente: false,
+        rescisaoIndireta: false,
+        reversaoPedidoDemissao: false,
+        
+        danosMorais: false,
+        indenizacaoEstabilidade: false,
+        indenizacaoDispensaDiscriminatoria: false,
+        
+        multaArt477: false,
+        multaArt467: false,
+        
+        // Antigas opções (mantidas para compatibilidade)
         ferias: false,
         decimoTerceiro: false,
         fgts: false,
@@ -178,10 +217,74 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
           )}
         />
       </div>
-
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="emailReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email do Reclamante</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="email@exemplo.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="telefoneReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Telefone do Reclamante</FormLabel>
+              <FormControl>
+                <Input placeholder="(00) 00000-0000" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      {tipoSelecionado === "trabalhista" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="emailReclamado"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email do Reclamado</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="empresa@exemplo.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="telefoneReclamado"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefone do Reclamado</FormLabel>
+                <FormControl>
+                  <Input placeholder="(00) 00000-0000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+      
+      {/* Manteremos as opções antigas de verbas trabalhistas para compatibilidade, 
+          mas posteriormente elas serão substituídas pelo novo componente VerbasTrabalhistas */}
       {tipoSelecionado === "trabalhista" && (
         <div className="mt-6 space-y-4">
-          <FormLabel>Verbas Trabalhistas Solicitadas</FormLabel>
+          <FormLabel>Verbas Trabalhistas Solicitadas (versão antiga)</FormLabel>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
