@@ -4,8 +4,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/types/questionnaire";
-import { Check } from "lucide-react";
 import CEPInput from "@/components/CEPInput";
+import { formatarCPF, formatarRG } from "@/utils/textFormatUtils";
 
 interface DadosPessoaisStepProps {
   form: UseFormReturn<FormValues>;
@@ -14,65 +14,10 @@ interface DadosPessoaisStepProps {
 const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
   const tipoSelecionado = form.watch("tipo");
 
-  // Redefinir as verbas quando o tipo de petição mudar
-  useEffect(() => {
-    if (tipoSelecionado !== "trabalhista") {
-      form.setValue("verbas", undefined);
-    } else if (!form.getValues("verbas")) {
-      // Inicializar com valores padrão se for trabalhista
-      form.setValue("verbas", {
-        // Valores padrão inicializados como false
-        avisoPrevioTrabalhado: false,
-        avisoPrevioIndenizado: false,
-        saldoSalario: false,
-        feriasVencidas: false,
-        feriasProporcionais: false,
-        decimoTerceiro: false,
-        multaFgts: false,
-        seguroDesemprego: false,
-        fgtsNaoDepositado: false,
-        
-        adicionalNoturno: false,
-        adicionalInsalubridade: false,
-        adicionalPericulosidade: false,
-        
-        horaExtra: false,
-        intervaloInterjornada: false,
-        intervaloIntrajornada: false,
-        
-        acumuloFuncao: false,
-        desvioFuncao: false,
-        
-        salarioAtrasado: false,
-        salarioPorFora: false,
-        inssNaoRecolhido: false,
-        
-        reconhecimentoVinculo: false,
-        registroCarteiraInexistente: false,
-        rescisaoIndireta: false,
-        reversaoPedidoDemissao: false,
-        
-        danosMorais: false,
-        indenizacaoEstabilidade: false,
-        indenizacaoDispensaDiscriminatoria: false,
-        
-        multaArt477: false,
-        multaArt467: false,
-        
-        // Antigas opções (mantidas para compatibilidade)
-        ferias: false,
-        decimoTerceiro: false,
-        fgts: false,
-        multaRescisoria: false,
-        avisoPrevio: false,
-        horasExtras: false,
-        danoMoral: false,
-      });
-    }
-  }, [tipoSelecionado, form]);
-
   return (
     <div className="space-y-4">
+      <h3 className="text-lg font-medium text-zinc-900">Dados do Reclamante</h3>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -95,7 +40,17 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>CPF</FormLabel>
               <FormControl>
-                <Input placeholder="000.000.000-00" {...field} />
+                <Input 
+                  placeholder="000.000.000-00" 
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    // Remove não-números e formata
+                    const rawValue = e.target.value.replace(/\D/g, '');
+                    const formattedValue = formatarCPF(rawValue);
+                    field.onChange(formattedValue);
+                  }}
+                  maxLength={14}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -111,7 +66,15 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
             <FormItem>
               <FormLabel>RG</FormLabel>
               <FormControl>
-                <Input placeholder="Digite o RG" {...field} />
+                <Input 
+                  placeholder="Digite o RG" 
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    // Tenta formatar o RG
+                    const formattedValue = formatarRG(e.target.value);
+                    field.onChange(formattedValue);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,12 +83,12 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
         
         <FormField
           control={form.control}
-          name="enderecoReclamante"
+          name="emailReclamante"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Endereço</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Rua, número" {...field} />
+                <Input type="email" placeholder="email@exemplo.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -136,32 +99,20 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="complemento"
+          name="telefoneReclamante"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Complemento</FormLabel>
+              <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="Apto, Bloco, etc." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="bairro"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bairro</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o bairro" {...field} />
+                <Input placeholder="(00) 00000-0000" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
+      
+      <h3 className="text-lg font-medium text-zinc-900 mt-6">Endereço do Reclamante</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
@@ -183,6 +134,52 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
                     if (data.uf) form.setValue("estado", data.uf);
                   }}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">        
+        <FormField
+          control={form.control}
+          name="enderecoReclamante"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Endereço</FormLabel>
+              <FormControl>
+                <Input placeholder="Rua, número" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="complemento"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Complemento</FormLabel>
+              <FormControl>
+                <Input placeholder="Apto, Bloco, etc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FormField
+          control={form.control}
+          name="bairro"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bairro</FormLabel>
+              <FormControl>
+                <Input placeholder="Digite o bairro" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -217,224 +214,6 @@ const DadosPessoaisStep = ({ form }: DadosPessoaisStepProps) => {
           )}
         />
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="emailReclamante"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email do Reclamante</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="email@exemplo.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="telefoneReclamante"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telefone do Reclamante</FormLabel>
-              <FormControl>
-                <Input placeholder="(00) 00000-0000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-      
-      {tipoSelecionado === "trabalhista" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="emailReclamado"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email do Reclamado</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="empresa@exemplo.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="telefoneReclamado"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefone do Reclamado</FormLabel>
-                <FormControl>
-                  <Input placeholder="(00) 00000-0000" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
-      
-      {/* Manteremos as opções antigas de verbas trabalhistas para compatibilidade, 
-          mas posteriormente elas serão substituídas pelo novo componente VerbasTrabalhistas */}
-      {tipoSelecionado === "trabalhista" && (
-        <div className="mt-6 space-y-4">
-          <FormLabel>Verbas Trabalhistas Solicitadas (versão antiga)</FormLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="verbas.ferias"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`} 
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label 
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    Férias + 1/3
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.decimoTerceiro"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    13º Salário
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.fgts"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    FGTS
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.multaRescisoria"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    Multa Rescisória (40% FGTS)
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.avisoPrevio"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    Aviso Prévio
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.horasExtras"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    Horas Extras
-                  </label>
-                </div>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="verbas.danoMoral"
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className={`flex h-5 w-5 items-center justify-center rounded-sm border ${field.value ? 'bg-primary border-primary' : 'border-primary'} cursor-pointer`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && <Check className="h-4 w-4 text-primary-foreground" />}
-                  </div>
-                  <label
-                    className="text-sm font-medium leading-none cursor-pointer"
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    Dano Moral
-                  </label>
-                </div>
-              )}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
