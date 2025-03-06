@@ -51,6 +51,14 @@ const Questionnaire = () => {
     if (data.argumentos) promptContent += `Argumentos adicionais: ${data.argumentos}\n`;
     if (data.pedidos) promptContent += `Pedidos específicos: ${data.pedidos}\n`;
     
+    // Verbas trabalhistas selecionadas
+    if (data.verbasTrabalhistas && data.verbasTrabalhistas.length > 0) {
+      promptContent += `\nVerbas trabalhistas solicitadas:\n`;
+      data.verbasTrabalhistas.forEach((verba: string) => {
+        promptContent += `- ${verba}\n`;
+      });
+    }
+    
     // Opções selecionadas
     promptContent += `\nOpções selecionadas:`;
     promptContent += `\n- Juízo 100% Digital: ${data.juizoDigital ? "Sim" : "Não"}`;
@@ -142,6 +150,15 @@ const Questionnaire = () => {
                     <h4 className="font-medium">Reclamada:</h4>
                     <p className="text-sm text-zinc-700">{formData.nomeReclamada || formData.razaoSocialReclamada}</p>
                   </div>
+                  
+                  {formData.verbasTrabalhistas && formData.verbasTrabalhistas.length > 0 && (
+                    <div className="mt-3">
+                      <h4 className="font-medium">Verbas solicitadas:</h4>
+                      <p className="text-sm text-zinc-700">
+                        {formData.verbasTrabalhistas.length} verbas selecionadas
+                      </p>
+                    </div>
+                  )}
                   
                   <p className="text-zinc-600 mt-4">
                     Sua petição está sendo gerada automaticamente pelo assistente. Aguarde enquanto processamos os dados.

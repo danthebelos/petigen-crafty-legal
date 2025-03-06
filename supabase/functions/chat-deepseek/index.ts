@@ -21,20 +21,8 @@ serve(async (req) => {
     const { mensagem, contexto, instrucoes } = await req.json()
     console.log("Recebido:", { mensagem, contexto })
 
-    // Analisar o contexto para determinar a abordagem apropriada
-    const isDocumentMainMethod = contexto && contexto.includes("enviou um documento principal");
-    const hasAttachedDocument = contexto && contexto.includes("Documento anexado:");
-
-    // Configurar prompt do sistema com base no tipo de entrada
-    let systemPrompt = "Você é um assistente jurídico especializado em gerar petições de alta qualidade.";
-    
-    if (isDocumentMainMethod) {
-      systemPrompt += " Você deve priorizar e considerar PRINCIPALMENTE as informações fornecidas no documento anexado mencionado no contexto, utilizando a descrição breve como orientação geral. Gere uma petição completa e bem fundamentada com base no documento, mantendo a linguagem formal e técnica apropriada.";
-    } else if (hasAttachedDocument) {
-      systemPrompt += " Você deve gerar uma petição completa com base nas informações do formulário E considerar as informações adicionais fornecidas no documento anexado, integrando-as na petição de forma coerente e fundamentada, mantendo a linguagem formal e técnica apropriada.";
-    } else {
-      systemPrompt += " Você deve gerar uma petição completa com base nas informações do formulário, mantendo a linguagem formal e técnica apropriada, incluindo todas as partes que compõem uma petição jurídica adequada.";
-    }
+    // Configurar prompt do sistema
+    let systemPrompt = "Você é um assistente jurídico especializado em gerar petições de alta qualidade. Você deve gerar uma petição completa com base nas informações do formulário, mantendo a linguagem formal e técnica apropriada, incluindo todas as partes que compõem uma petição jurídica adequada.";
 
     const payload = {
       model: "deepseek-chat",
