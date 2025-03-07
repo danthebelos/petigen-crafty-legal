@@ -283,7 +283,7 @@ const Dashboard = () => {
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="ativo">Ativo</SelectItem>
                     <SelectItem value="arquivado">Arquivado</SelectItem>
                     <SelectItem value="concluido">Concluído</SelectItem>
@@ -296,7 +296,7 @@ const Dashboard = () => {
                     <SelectValue placeholder="Filtrar por tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os tipos</SelectItem>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
                     <SelectItem value="trabalhista">Trabalhista</SelectItem>
                     <SelectItem value="civel">Cível</SelectItem>
                     <SelectItem value="consumidor">Consumidor</SelectItem>
