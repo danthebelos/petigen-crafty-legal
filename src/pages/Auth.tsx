@@ -75,7 +75,7 @@ const Auth = () => {
 
           toast({
             title: "Cadastro realizado!",
-            description: "Verifique seu email para confirmar o cadastro.",
+            description: "Um email de confirmação foi enviado para " + email,
           });
         }
       }
