@@ -1,62 +1,75 @@
 
-import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { UseFormReturn } from "react-hook-form";
-import { FormValues } from "@/types/questionnaire";
-import { Label } from "@/components/ui/label";
-import QuestionTooltip from "@/components/QuestionTooltip";
+import { QuestionTooltip } from '../QuestionTooltip';
+import { FormNavigation } from './FormNavigation';
+import { type QuestionnaireFormValues } from '@/types/questionnaire';
 
 interface InputMethodStepProps {
-  form: UseFormReturn<FormValues>;
+  formValues: QuestionnaireFormValues;
+  onNext: () => void;
+  onPrevious: () => void;
+  onValueChange: (name: keyof QuestionnaireFormValues, value: string) => void;
 }
 
-const InputMethodStep = ({ form }: InputMethodStepProps) => {
+export const InputMethodStep: React.FC<InputMethodStepProps> = ({
+  formValues,
+  onNext,
+  onPrevious,
+  onValueChange,
+}) => {
+  const form = useForm<{ method: string }>({
+    defaultValues: {
+      method: formValues.metodoEntrada || 'questionario',
+    },
+  });
+
+  const handleNext = (data: { method: string }) => {
+    onValueChange('metodoEntrada', data.method);
+    onNext();
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2 mb-4">
-        <h3 className="text-lg font-medium text-zinc-900">Como deseja gerar sua petição?</h3>
-        <QuestionTooltip content="Escolha entre preencher um questionário detalhado ou enviar um documento com as informações necessárias." />
-      </div>
-      
-      <FormField
-        control={form.control}
-        name="inputMethod"
-        render={({ field }) => (
-          <FormItem className="space-y-3">
-            <FormControl>
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                className="flex flex-col space-y-3"
-              >
-                <div className="flex items-start space-x-3 border rounded-md p-4 hover:bg-zinc-50 transition-colors">
-                  <RadioGroupItem value="questionario" id="questionario" className="mt-1" />
-                  <div>
-                    <Label htmlFor="questionario" className="text-base font-medium">Preencher questionário</Label>
-                    <p className="text-sm text-zinc-600 mt-1">
-                      Responda a perguntas específicas para gerar uma petição personalizada passo a passo.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3 border rounded-md p-4 hover:bg-zinc-50 transition-colors">
-                  <RadioGroupItem value="documento" id="documento" className="mt-1" />
-                  <div>
-                    <Label htmlFor="documento" className="text-base font-medium">Enviar documento</Label>
-                    <p className="text-sm text-zinc-600 mt-1">
-                      Faça upload de um documento com as informações do caso para gerar a petição mais rapidamente.
-                    </p>
-                  </div>
-                </div>
-              </RadioGroup>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleNext)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="method"
+          render={({ field }) => (
+            <FormItem className="space-y-4">
+              <FormLabel className="text-lg font-semibold flex items-center">
+                Como deseja fornecer as informações para a petição?
+                <QuestionTooltip content="Escolha como você deseja fornecer as informações necessárias para gerar sua petição." />
+              </FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="space-y-3"
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <RadioGroupItem value="questionario" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">
+                      Preencher questionário
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormNavigation 
+          onPrevious={onPrevious}
+          showPrevious={false}
+          isLastStep={false}
+        />
+      </form>
+    </Form>
   );
 };
-
-export default InputMethodStep;
