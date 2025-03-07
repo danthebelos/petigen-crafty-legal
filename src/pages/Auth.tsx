@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -28,7 +29,7 @@ const Auth = () => {
           password,
         });
         if (error) throw error;
-        navigate("/questionnaire");
+        navigate("/dashboard");
       } else {
         console.log("Iniciando processo de cadastro...");
         

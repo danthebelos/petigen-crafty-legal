@@ -96,6 +96,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nome_completo: string | null
+          oab: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nome_completo?: string | null
+          oab?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_completo?: string | null
+          oab?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
