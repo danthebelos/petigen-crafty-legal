@@ -23,7 +23,7 @@ serve(async (req) => {
 
     // Verificar se há informações de advogado no contexto
     const advogadoInfo = contexto.includes("Advogado Responsável:")
-      ? "A petição deve incluir todos os dados do advogado que constam no contexto (nome, OAB, email, etc.) nos locais apropriados da petição."
+      ? "A petição deve incluir todos os dados do advogado que constam no contexto (nome, OAB, email, etc.) nos locais apropriados da petição, incluindo cabeçalho e assinatura."
       : ""; 
 
     // Configurar prompt do sistema

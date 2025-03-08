@@ -51,3 +51,52 @@ export const formSchema = z.object({
 });
 
 export type FormValues = z.infer<typeof formSchema>;
+
+// Categorias de verbas trabalhistas
+export const verbasTrabalhistas = [
+  {
+    id: "remuneracao",
+    label: "Remuneração",
+    items: [
+      { id: "salarios_atrasados", label: "Salários Atrasados" },
+      { id: "decimo_terceiro", label: "Décimo Terceiro Salário" },
+      { id: "ferias_proporcionais", label: "Férias Proporcionais" },
+      { id: "ferias_vencidas", label: "Férias Vencidas" },
+      { id: "adicional_um_terco_ferias", label: "Adicional de 1/3 de Férias" },
+      { id: "comissoes", label: "Comissões" },
+      { id: "horas_extras", label: "Horas Extras" },
+    ]
+  },
+  {
+    id: "fgts",
+    label: "FGTS e Indenizações",
+    items: [
+      { id: "fgts_nao_depositado", label: "FGTS Não Depositado" },
+      { id: "multa_40_fgts", label: "Multa de 40% do FGTS" },
+      { id: "indenizacao_compensatoria", label: "Indenização Compensatória" },
+      { id: "aviso_previo", label: "Aviso Prévio" },
+      { id: "seguro_desemprego", label: "Seguro-Desemprego" },
+    ]
+  },
+  {
+    id: "adicionais",
+    label: "Adicionais",
+    items: [
+      { id: "adicional_noturno", label: "Adicional Noturno" },
+      { id: "adicional_insalubridade", label: "Adicional de Insalubridade" },
+      { id: "adicional_periculosidade", label: "Adicional de Periculosidade" },
+      { id: "adicional_transferencia", label: "Adicional de Transferência" },
+    ]
+  },
+  {
+    id: "extras",
+    label: "Outros Pedidos",
+    items: [
+      { id: "danos_morais", label: "Danos Morais" },
+      { id: "danos_materiais", label: "Danos Materiais" },
+      { id: "equiparacao_salarial", label: "Equiparação Salarial" },
+      { id: "horas_in_itinere", label: "Horas In Itinere" },
+      { id: "reconhecimento_vinculo", label: "Reconhecimento de Vínculo Empregatício" },
+    ]
+  }
+];
