@@ -5,16 +5,48 @@ import QuestionnaireForm from "@/components/QuestionnaireForm";
 import ChatInterface from "@/components/ChatInterface";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+type Advogado = {
+  id: string;
+  nome_completo: string;
+  oab: string;
+  email: string;
+  foto_url?: string;
+  bio?: string;
+};
 
 const Questionnaire = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [promptContext, setPromptContext] = useState<string | null>(null);
+  const [selectedAdvogado, setSelectedAdvogado] = useState<Advogado | null>(null);
   const chatRef = useRef<any>(null);
 
-  const handleFormSubmit = (data: Record<string, any>) => {
+  const handleFormSubmit = async (data: Record<string, any>) => {
     setFormData(data);
+    
+    // Buscar dados do advogado selecionado
+    if (data.advogadoId) {
+      try {
+        const { data: advogadoData, error } = await supabase
+          .from("advogados")
+          .select("*")
+          .eq("id", data.advogadoId)
+          .single();
+        
+        if (error) throw error;
+        setSelectedAdvogado(advogadoData as Advogado);
+      } catch (error) {
+        console.error("Erro ao buscar dados do advogado:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível buscar os dados do advogado selecionado.",
+        });
+      }
+    }
     
     // Construir o endereço completo
     const endereco = data.enderecoReclamante || '';
@@ -28,6 +60,15 @@ const Questionnaire = () => {
     
     // Construindo o prompt para enviar para o chat
     let promptContent = `Com base nas seguintes informações, gere uma petição ${data.tipo || "jurídica"} completa, extremamente bem fundamentada com no mínimo 7 páginas, incluindo citações doutrinárias e jurisprudenciais pertinentes. A petição deve seguir a formatação e estrutura adequada, com espaçamento correto e todos os elementos necessários. Inclua fundamentação legal detalhada e adequada ao caso.\n\n`;
+    
+    // Adicionando os dados do advogado ao prompt
+    if (selectedAdvogado) {
+      promptContent += `Advogado Responsável: ${selectedAdvogado.nome_completo}\n`;
+      promptContent += `OAB: ${selectedAdvogado.oab}\n`;
+      promptContent += `Email Profissional: ${selectedAdvogado.email}\n`;
+      if (selectedAdvogado.bio) promptContent += `Biografia: ${selectedAdvogado.bio}\n`;
+      promptContent += `\n`;
+    }
     
     // Adicionando os dados do formulário ao prompt
     promptContent += `Tipo de petição: ${data.tipo}\n`;
@@ -103,6 +144,7 @@ const Questionnaire = () => {
     setFormData({});
     setIsFormSubmitted(false);
     setPromptContext(null);
+    setSelectedAdvogado(null);
   };
 
   return (
@@ -140,6 +182,31 @@ const Questionnaire = () => {
                                     formData.tipo === "habeas-corpus" ? "Habeas Corpus" : 
                                     formData.tipo === "execucao" ? "Execução de Título Extrajudicial" : ""}
                   </h3>
+                  
+                  {selectedAdvogado && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <h4 className="font-medium">Advogado:</h4>
+                      <div className="flex items-center gap-2">
+                        {selectedAdvogado.foto_url ? (
+                          <div className="h-8 w-8 rounded-full overflow-hidden">
+                            <img
+                              src={selectedAdvogado.foto_url}
+                              alt={selectedAdvogado.nome_completo}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500">
+                            {selectedAdvogado.nome_completo.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium">{selectedAdvogado.nome_completo}</p>
+                          <p className="text-xs text-zinc-500">OAB: {selectedAdvogado.oab}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="mt-3">
                     <h4 className="font-medium">Reclamante:</h4>

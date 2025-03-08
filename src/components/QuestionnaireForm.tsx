@@ -11,6 +11,7 @@ import FatosArgumentosStep from "@/components/questionnaire/FatosArgumentosStep"
 import VerbasTrabalistasStep from "@/components/questionnaire/VerbasTrabalhistas";
 import FormNavigation from "@/components/questionnaire/FormNavigation";
 import QuestoesPreviewsStep from "@/components/questionnaire/QuestoesPreviewsStep";
+import AdvogadoSelection from "@/components/questionnaire/AdvogadoSelection";
 import { FormValues, formSchema, steps } from "@/types/questionnaire";
 
 interface QuestionnaireFormProps {
@@ -50,6 +51,7 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
       argumentos: "",
       pedidos: "",
       verbasTrabalhistas: [],
+      advogadoId: "",
     },
   });
 
@@ -78,7 +80,7 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
     
     switch (currentStepId) {
       case "tipo":
-        return ["tipo"];
+        return ["tipo", "advogadoId"];
       case "parte":
         return ["nomeReclamante", "cpfReclamante"];
       case "parte-reclamada":
@@ -100,7 +102,12 @@ const QuestionnaireForm = ({ onSubmit }: QuestionnaireFormProps) => {
     
     switch (currentStepId) {
       case "tipo":
-        return <TipoPeticaoStep form={form} />;
+        return (
+          <div className="space-y-6">
+            <TipoPeticaoStep form={form} />
+            <AdvogadoSelection form={form} />
+          </div>
+        );
       case "parte":
         return <DadosPessoaisStep form={form} />;
       case "parte-reclamada":

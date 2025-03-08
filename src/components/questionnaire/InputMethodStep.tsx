@@ -1,75 +1,89 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { QuestionTooltip } from '../QuestionTooltip';
-import { FormNavigation } from './FormNavigation';
-import { type QuestionnaireFormValues } from '@/types/questionnaire';
+import React from "react";
+import { UseFormReturn } from "react-hook-form";
+import { 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel 
+} from "@/components/ui/form";
+import QuestionTooltip from "../QuestionTooltip";
+import FormNavigation from "./FormNavigation";
+import { FormValues } from "@/types/questionnaire";
 
 interface InputMethodStepProps {
-  formValues: QuestionnaireFormValues;
-  onNext: () => void;
+  form: UseFormReturn<FormValues>;
+  currentStep: number;
+  totalSteps: number;
   onPrevious: () => void;
-  onValueChange: (name: keyof QuestionnaireFormValues, value: string) => void;
+  onNext: () => void;
 }
 
-export const InputMethodStep: React.FC<InputMethodStepProps> = ({
-  formValues,
-  onNext,
-  onPrevious,
-  onValueChange,
-}) => {
-  const form = useForm<{ method: string }>({
-    defaultValues: {
-      method: formValues.metodoEntrada || 'questionario',
-    },
-  });
-
-  const handleNext = (data: { method: string }) => {
-    onValueChange('metodoEntrada', data.method);
-    onNext();
-  };
-
+const InputMethodStep = ({ 
+  form, 
+  currentStep, 
+  totalSteps, 
+  onPrevious, 
+  onNext 
+}: InputMethodStepProps) => {
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleNext)} className="space-y-6">
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Método de Entrada</h2>
+          <QuestionTooltip content="Escolha como deseja inserir as informações do processo" />
+        </div>
+        
         <FormField
           control={form.control}
-          name="method"
+          name="metodoEntrada"
           render={({ field }) => (
-            <FormItem className="space-y-4">
-              <FormLabel className="text-lg font-semibold flex items-center">
-                Como deseja fornecer as informações para a petição?
-                <QuestionTooltip content="Escolha como você deseja fornecer as informações necessárias para gerar sua petição." />
-              </FormLabel>
+            <FormItem>
+              <FormLabel>Método de Entrada</FormLabel>
               <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="space-y-3"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <RadioGroupItem value="questionario" />
-                    </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">
-                      Preencher questionário
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div
+                    className={`border rounded-lg p-4 cursor-pointer transition ${
+                      field.value === 'formulario' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    onClick={() => field.onChange('formulario')}
+                  >
+                    <h3 className="font-medium mb-2">Formulário</h3>
+                    <p className="text-sm text-gray-500">
+                      Preencha um formulário passo a passo com os detalhes do caso
+                    </p>
+                  </div>
+                  
+                  <div
+                    className={`border rounded-lg p-4 cursor-pointer transition ${
+                      field.value === 'conversa' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    onClick={() => field.onChange('conversa')}
+                  >
+                    <h3 className="font-medium mb-2">Conversa</h3>
+                    <p className="text-sm text-gray-500">
+                      Converse com nosso assistente que coletará as informações necessárias
+                    </p>
+                  </div>
+                </div>
               </FormControl>
             </FormItem>
           )}
         />
-
-        <FormNavigation 
-          onPrevious={onPrevious}
-          showPrevious={false}
-          isLastStep={false}
-        />
-      </form>
-    </Form>
+      </div>
+      
+      <FormNavigation 
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
+    </div>
   );
 };
+
+export default InputMethodStep;

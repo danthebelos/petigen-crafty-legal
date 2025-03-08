@@ -21,8 +21,13 @@ serve(async (req) => {
     const { mensagem, contexto, instrucoes } = await req.json()
     console.log("Recebido:", { mensagem, contexto })
 
+    // Verificar se há informações de advogado no contexto
+    const advogadoInfo = contexto.includes("Advogado Responsável:")
+      ? "A petição deve incluir todos os dados do advogado que constam no contexto (nome, OAB, email, etc.) nos locais apropriados da petição."
+      : ""; 
+
     // Configurar prompt do sistema
-    let systemPrompt = "Você é um assistente jurídico especializado em gerar petições de alta qualidade. Você deve gerar uma petição completa com base nas informações do formulário, mantendo a linguagem formal e técnica apropriada, incluindo todas as partes que compõem uma petição jurídica adequada.";
+    let systemPrompt = `Você é um assistente jurídico especializado em gerar petições de alta qualidade. Você deve gerar uma petição completa com base nas informações do formulário, mantendo a linguagem formal e técnica apropriada, incluindo todas as partes que compõem uma petição jurídica adequada. ${advogadoInfo}`;
 
     const payload = {
       model: "deepseek-chat",
