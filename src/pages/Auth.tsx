@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,15 @@ const Auth = () => {
   const [nomeCompleto, setNomeCompleto] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Verifica se há um modo salvo no localStorage
+    const authMode = localStorage.getItem("authMode");
+    if (authMode === "signup") {
+      setIsLogin(false);
+      localStorage.removeItem("authMode"); // Limpa após usar
+    }
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

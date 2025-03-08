@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import ContractGenerator from "./pages/ContractGenerator";
 import Dashboard from "./pages/Dashboard";
 import Header from "./components/Header";
+import AdvogadosProfiles from "./pages/AdvogadosProfiles";
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/advogados"
+            element={
+              <ProtectedRoute>
+                <AdvogadosProfiles />
               </ProtectedRoute>
             }
           />
