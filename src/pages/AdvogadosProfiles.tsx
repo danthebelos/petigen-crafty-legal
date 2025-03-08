@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Plus, UserPlus, Trash2, Upload } from "lucide-react";
+import { Loader2, Plus, UserPlus, Trash2 } from "lucide-react";
 
 type Advogado = {
   id: string;
@@ -17,6 +17,8 @@ type Advogado = {
   foto_url?: string;
   bio?: string;
   escritorio_id: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 const AdvogadosProfiles = () => {
@@ -45,13 +47,14 @@ const AdvogadosProfiles = () => {
   const carregarAdvogados = async () => {
     setLoading(true);
     try {
+      // Using type casting to resolve TS issues until types.ts is updated
       const { data, error } = await supabase
         .from("advogados")
         .select("*")
         .eq("escritorio_id", user?.id);
 
       if (error) throw error;
-      setAdvogados(data || []);
+      setAdvogados(data as Advogado[] || []);
     } catch (error) {
       console.error("Erro ao carregar advogados:", error);
       toast({
@@ -135,9 +138,9 @@ const AdvogadosProfiles = () => {
             nome_completo: novoAdvogado.nome_completo,
             oab: novoAdvogado.oab,
             email: novoAdvogado.email,
-            bio: novoAdvogado.bio,
+            bio: novoAdvogado.bio || null,
             escritorio_id: user?.id,
-          },
+          } as any
         ])
         .select()
         .single();
@@ -150,7 +153,7 @@ const AdvogadosProfiles = () => {
         if (fotoUrl) {
           const { error: updateError } = await supabase
             .from("advogados")
-            .update({ foto_url: fotoUrl })
+            .update({ foto_url: fotoUrl } as any)
             .eq("id", data.id);
           
           if (updateError) throw updateError;
@@ -173,7 +176,7 @@ const AdvogadosProfiles = () => {
       });
       
       setAddingAdvogado(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao adicionar advogado:", error);
       toast({
         variant: "destructive",
