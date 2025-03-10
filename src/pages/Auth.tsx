@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +18,7 @@ const Auth = () => {
   const [nomeCompleto, setNomeCompleto] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Verifica se há um modo salvo no localStorage
@@ -25,7 +27,12 @@ const Auth = () => {
       setIsLogin(false);
       localStorage.removeItem("authMode"); // Limpa após usar
     }
-  }, []);
+
+    // Redireciona se o usuário já estiver autenticado
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +117,7 @@ const Auth = () => {
           <p className="mt-2 text-sm text-zinc-600">
             {isLogin
               ? "Acesse sua conta para gerenciar suas petições"
-              : "Cadastre-se para começar a usar o Petigen"}
+              : "Cadastre-se para começar a usar o sistema"}
           </p>
         </div>
 

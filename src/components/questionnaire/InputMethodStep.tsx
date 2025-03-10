@@ -1,86 +1,124 @@
-
-import React from "react";
-import { UseFormReturn } from "react-hook-form";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel 
-} from "@/components/ui/form";
-import QuestionTooltip from "../QuestionTooltip";
-import FormNavigation from "./FormNavigation";
-import { FormValues } from "@/types/questionnaire";
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { FormNavigation } from "./FormNavigation";
+import { usePeticaoContext } from "./PeticaoContext";
+import { FileText, Mic, MessageSquareText } from "lucide-react";
 
 interface InputMethodStepProps {
-  form: UseFormReturn<FormValues>;
   currentStep: number;
   totalSteps: number;
   onPrevious: () => void;
   onNext: () => void;
+  onSubmit: () => void;
 }
 
-const InputMethodStep = ({ 
-  form, 
-  currentStep, 
-  totalSteps, 
-  onPrevious, 
-  onNext 
+const InputMethodStep = ({
+  currentStep,
+  totalSteps,
+  onPrevious,
+  onNext,
+  onSubmit
 }: InputMethodStepProps) => {
+  const { formData, setFormData } = usePeticaoContext();
+  const [selectedMethod, setSelectedMethod] = useState<string>(
+    formData.metodoEntrada || "texto"
+  );
+
+  const handleMethodSelect = (method: string) => {
+    setSelectedMethod(method);
+    setFormData({ ...formData, metodoEntrada: method as any });
+  };
+
+  const handleNext = () => {
+    onNext();
+  };
+
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Método de Entrada</h2>
-          <QuestionTooltip content="Escolha como deseja inserir as informações do processo" />
-        </div>
+      <h2 className="text-2xl font-semibold">Como você deseja informar os detalhes da petição?</h2>
+      
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card 
+          className={`cursor-pointer transition-all hover:border-primary ${
+            selectedMethod === "texto" ? "border-2 border-primary" : ""
+          }`}
+          onClick={() => handleMethodSelect("texto")}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-center">
+              <FileText className="h-8 w-8 mx-auto mb-2" />
+              Texto
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-center">
+              Preencha um formulário com os detalhes da sua petição
+            </p>
+          </CardContent>
+          <CardFooter className="pt-2 justify-center">
+            <Checkbox checked={selectedMethod === "texto"} />
+          </CardFooter>
+        </Card>
         
-        <FormField
-          control={form.control}
-          name="metodoEntrada"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Método de Entrada</FormLabel>
-              <FormControl>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer transition ${
-                      field.value === 'formulario' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onClick={() => field.onChange('formulario')}
-                  >
-                    <h3 className="font-medium mb-2">Formulário</h3>
-                    <p className="text-sm text-gray-500">
-                      Preencha um formulário passo a passo com os detalhes do caso
-                    </p>
-                  </div>
-                  
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer transition ${
-                      field.value === 'conversa' 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    onClick={() => field.onChange('conversa')}
-                  >
-                    <h3 className="font-medium mb-2">Conversa</h3>
-                    <p className="text-sm text-gray-500">
-                      Converse com nosso assistente que coletará as informações necessárias
-                    </p>
-                  </div>
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        <Card 
+          className={`cursor-pointer transition-all hover:border-primary ${
+            selectedMethod === "conversa" ? "border-2 border-primary" : ""
+          }`}
+          onClick={() => handleMethodSelect("conversa")}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-center">
+              <Mic className="h-8 w-8 mx-auto mb-2" />
+              Conversa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-center">
+              Converse com nosso assistente que coletará as informações necessárias
+            </p>
+          </CardContent>
+          <CardFooter className="pt-2 justify-center">
+            <Checkbox checked={selectedMethod === "conversa"} />
+          </CardFooter>
+        </Card>
+        
+        <Card 
+          className={`cursor-pointer transition-all hover:border-primary ${
+            selectedMethod === "mensagem" ? "border-2 border-primary" : ""
+          }`}
+          onClick={() => handleMethodSelect("mensagem")}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-center">
+              <MessageSquareText className="h-8 w-8 mx-auto mb-2" />
+              Mensagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-center">
+              Envie uma mensagem para nós com os detalhes da sua petição
+            </p>
+          </CardContent>
+          <CardFooter className="pt-2 justify-center">
+            <Checkbox checked={selectedMethod === "mensagem"} />
+          </CardFooter>
+        </Card>
       </div>
       
       <FormNavigation 
         currentStep={currentStep}
         totalSteps={totalSteps}
         onPrevious={onPrevious}
-        onNext={onNext}
+        onNext={handleNext}
+        onSubmit={onSubmit}
       />
     </div>
   );
