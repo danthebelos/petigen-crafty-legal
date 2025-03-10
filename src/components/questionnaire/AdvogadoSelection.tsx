@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { usePeticaoContext } from "./PeticaoContext";
 
 type Advogado = {
   id: string;
@@ -22,43 +23,74 @@ type Advogado = {
 };
 
 const AdvogadoSelection = ({ form }: { form: UseFormReturn<FormValues> }) => {
-  const { user } = useAuth();
-  const [advogados, setAdvogados] = useState<Advogado[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, advogados, loadingAdvogados, currentProfile } = useAuth();
+  const { selectedAdvogado, setSelectedAdvogado } = usePeticaoContext();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Set the default value based on currentProfile if it's an advogado
   useEffect(() => {
-    if (user) {
-      carregarAdvogados();
+    if (currentProfile.type === "advogado" && currentProfile.data) {
+      form.setValue("advogadoId", currentProfile.data.id);
+      
+      // Find the selected advogado in the advogados array
+      const foundAdvogado = advogados.find(adv => adv.id === currentProfile.data.id);
+      
+      if (foundAdvogado) {
+        setSelectedAdvogado(foundAdvogado as any);
+      }
     }
-  }, [user]);
+  }, [currentProfile, advogados, form, setSelectedAdvogado]);
 
-  const carregarAdvogados = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("advogados")
-        .select("*")
-        .eq("escritorio_id", user?.id);
-
-      if (error) throw error;
-      setAdvogados(data as Advogado[] || []);
-    } catch (error) {
-      console.error("Erro ao carregar advogados:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível carregar a lista de advogados.",
-      });
-    } finally {
-      setLoading(false);
+  // Update the selectedAdvogado when the form value changes
+  useEffect(() => {
+    const advogadoId = form.watch("advogadoId");
+    
+    if (advogadoId) {
+      const foundAdvogado = advogados.find(adv => adv.id === advogadoId);
+      
+      if (foundAdvogado) {
+        setSelectedAdvogado(foundAdvogado as any);
+      }
     }
-  };
+  }, [form.watch("advogadoId"), advogados, setSelectedAdvogado]);
 
   const handleCadastrarAdvogado = () => {
     navigate("/advogados");
   };
+
+  // If currentProfile is an advogado, don't show selection
+  if (currentProfile.type === "advogado") {
+    return (
+      <div className="space-y-4">
+        <FormLabel>Advogado Selecionado</FormLabel>
+        <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/50">
+          {currentProfile.data?.foto_url ? (
+            <div className="h-12 w-12 rounded-full overflow-hidden">
+              <img
+                src={currentProfile.data.foto_url}
+                alt={currentProfile.data.nome_completo}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              {currentProfile.data?.nome_completo.charAt(0)}
+            </div>
+          )}
+          <div>
+            <p className="font-medium">{currentProfile.data?.nome_completo}</p>
+            <p className="text-sm text-muted-foreground">{currentProfile.data?.oab}</p>
+          </div>
+        </div>
+        <input 
+          type="hidden" 
+          {...form.register("advogadoId")} 
+          value={currentProfile.data?.id} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -75,7 +107,7 @@ const AdvogadoSelection = ({ form }: { form: UseFormReturn<FormValues> }) => {
         </Button>
       </div>
 
-      {loading ? (
+      {loadingAdvogados ? (
         <div className="flex justify-center p-4">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>

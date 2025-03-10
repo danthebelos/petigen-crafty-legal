@@ -1,7 +1,16 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, FileCheck, BarChart, Users, User, LogOut } from "lucide-react";
+import { 
+  FileText, 
+  FileCheck, 
+  BarChart, 
+  Users, 
+  User, 
+  LogOut, 
+  ChevronDown, 
+  Building2
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -9,18 +18,45 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { 
+    user, 
+    signOut, 
+    advogados, 
+    loadingAdvogados, 
+    currentProfile, 
+    switchProfile 
+  } = useAuth();
   
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const getActiveProfileName = () => {
+    if (currentProfile.type === "escritorio") {
+      return "Escritório";
+    }
+    return currentProfile.data?.nome_completo || "Advogado";
   };
 
   return (
@@ -80,6 +116,75 @@ const Header = () => {
                   </Link>
                 </Button>
                 
+                {/* Profile Switcher */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      {currentProfile.type === "escritorio" ? (
+                        <Building2 size={16} />
+                      ) : (
+                        <Avatar className="h-5 w-5">
+                          {currentProfile.data?.foto_url ? (
+                            <AvatarImage src={currentProfile.data.foto_url} alt={currentProfile.data.nome_completo} />
+                          ) : (
+                            <AvatarFallback className="text-xs">
+                              {getInitials(currentProfile.data?.nome_completo || "")}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                      )}
+                      <span className="hidden sm:inline max-w-28 truncate">
+                        {getActiveProfileName()}
+                      </span>
+                      <ChevronDown size={14} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Alternar Perfil</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem 
+                      onClick={() => switchProfile("escritorio")}
+                      className={`gap-2 ${currentProfile.type === "escritorio" ? "bg-zinc-100" : ""}`}
+                    >
+                      <Building2 size={16} />
+                      <span>Escritório</span>
+                    </DropdownMenuItem>
+                    
+                    {advogados.length > 0 && (
+                      <>
+                        <DropdownMenuLabel className="mt-2 text-xs">Advogados</DropdownMenuLabel>
+                        <DropdownMenuGroup>
+                          {advogados.map(advogado => (
+                            <DropdownMenuItem 
+                              key={advogado.id} 
+                              onClick={() => switchProfile("advogado", advogado.id)}
+                              className={`gap-2 ${
+                                currentProfile.type === "advogado" && 
+                                currentProfile.data?.id === advogado.id 
+                                  ? "bg-zinc-100" 
+                                  : ""
+                              }`}
+                            >
+                              <Avatar className="h-5 w-5">
+                                {advogado.foto_url ? (
+                                  <AvatarImage src={advogado.foto_url} alt={advogado.nome_completo} />
+                                ) : (
+                                  <AvatarFallback className="text-xs">
+                                    {getInitials(advogado.nome_completo)}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <span className="truncate">{advogado.nome_completo}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuGroup>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* User Account Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">

@@ -1,125 +1,74 @@
+
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { FormNavigation } from "./FormNavigation";
-import { usePeticaoContext } from "./PeticaoContext";
-import { FileText, Mic, MessageSquareText } from "lucide-react";
+import { UseFormReturn } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { FormValues } from "@/types/questionnaire";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import AdvogadoSelection from "./AdvogadoSelection";
+import FormNavigation from "./FormNavigation";
 
-interface InputMethodStepProps {
-  currentStep: number;
-  totalSteps: number;
-  onPrevious: () => void;
+const InputMethodStep = ({ form, onNext, onBack }: { 
+  form: UseFormReturn<FormValues>;
   onNext: () => void;
-  onSubmit: () => void;
-}
+  onBack: () => void;
+}) => {
+  const [inputMethod, setInputMethod] = useState<"form" | "text">("form");
 
-const InputMethodStep = ({
-  currentStep,
-  totalSteps,
-  onPrevious,
-  onNext,
-  onSubmit
-}: InputMethodStepProps) => {
-  const { formData, setFormData } = usePeticaoContext();
-  const [selectedMethod, setSelectedMethod] = useState<string>(
-    formData.metodoEntrada || "texto"
-  );
-
-  const handleMethodSelect = (method: string) => {
-    setSelectedMethod(method);
-    setFormData({ ...formData, metodoEntrada: method as any });
-  };
-
-  const handleNext = () => {
-    onNext();
+  const handleTabChange = (value: string) => {
+    setInputMethod(value as "form" | "text");
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Como você deseja informar os detalhes da petição?</h2>
-      
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card 
-          className={`cursor-pointer transition-all hover:border-primary ${
-            selectedMethod === "texto" ? "border-2 border-primary" : ""
-          }`}
-          onClick={() => handleMethodSelect("texto")}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-center">
-              <FileText className="h-8 w-8 mx-auto mb-2" />
-              Texto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-center">
-              Preencha um formulário com os detalhes da sua petição
-            </p>
-          </CardContent>
-          <CardFooter className="pt-2 justify-center">
-            <Checkbox checked={selectedMethod === "texto"} />
-          </CardFooter>
-        </Card>
-        
-        <Card 
-          className={`cursor-pointer transition-all hover:border-primary ${
-            selectedMethod === "conversa" ? "border-2 border-primary" : ""
-          }`}
-          onClick={() => handleMethodSelect("conversa")}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-center">
-              <Mic className="h-8 w-8 mx-auto mb-2" />
-              Conversa
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-center">
-              Converse com nosso assistente que coletará as informações necessárias
-            </p>
-          </CardContent>
-          <CardFooter className="pt-2 justify-center">
-            <Checkbox checked={selectedMethod === "conversa"} />
-          </CardFooter>
-        </Card>
-        
-        <Card 
-          className={`cursor-pointer transition-all hover:border-primary ${
-            selectedMethod === "mensagem" ? "border-2 border-primary" : ""
-          }`}
-          onClick={() => handleMethodSelect("mensagem")}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-center">
-              <MessageSquareText className="h-8 w-8 mx-auto mb-2" />
-              Mensagem
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-center">
-              Envie uma mensagem para nós com os detalhes da sua petição
-            </p>
-          </CardContent>
-          <CardFooter className="pt-2 justify-center">
-            <Checkbox checked={selectedMethod === "mensagem"} />
-          </CardFooter>
-        </Card>
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Método de Entrada</h2>
+        <p className="text-muted-foreground">
+          Escolha como deseja fornecer as informações para a petição.
+        </p>
       </div>
-      
-      <FormNavigation 
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        onPrevious={onPrevious}
-        onNext={handleNext}
-        onSubmit={onSubmit}
-      />
+
+      <Tabs
+        value={inputMethod}
+        onValueChange={handleTabChange}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="form">Formulário Guiado</TabsTrigger>
+          <TabsTrigger value="text">Texto Livre</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="form" className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            O formulário guiado irá solicitar informações específicas para sua petição
+            passo a passo.
+          </p>
+        </TabsContent>
+
+        <TabsContent value="text" className="space-y-6">
+          <FormField
+            control={form.control}
+            name="contextoLivre"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descreva seu caso</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder="Descreva todos os fatos relevantes do seu caso. Quanto mais detalhes, melhor será a petição gerada."
+                    className="min-h-[200px]"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <AdvogadoSelection form={form} />
+
+      <FormNavigation onBack={onBack} onNext={onNext} />
     </div>
   );
 };

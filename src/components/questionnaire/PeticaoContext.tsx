@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState } from "react";
 import { FormValues } from "@/types/questionnaire";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Advogado = {
   id: string;
@@ -26,16 +27,30 @@ type PeticaoContextType = {
 const PeticaoContext = createContext<PeticaoContextType | undefined>(undefined);
 
 export const PeticaoProvider = ({ children }: { children: React.ReactNode }) => {
+  const { currentProfile, advogados } = useAuth();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [promptContext, setPromptContext] = useState<string | null>(null);
-  const [selectedAdvogado, setSelectedAdvogado] = useState<Advogado | null>(null);
+  
+  // Initialize selectedAdvogado based on currentProfile if it's an advogado
+  const [selectedAdvogado, setSelectedAdvogado] = useState<Advogado | null>(() => {
+    if (currentProfile.type === "advogado" && currentProfile.data) {
+      return currentProfile.data as Advogado;
+    }
+    return null;
+  });
 
   const handleNewPetition = () => {
     setFormData({});
     setIsFormSubmitted(false);
     setPromptContext(null);
-    setSelectedAdvogado(null);
+    
+    // Set selected advogado based on current profile when starting a new petition
+    if (currentProfile.type === "advogado" && currentProfile.data) {
+      setSelectedAdvogado(currentProfile.data as Advogado);
+    } else {
+      setSelectedAdvogado(null);
+    }
   };
 
   return (
